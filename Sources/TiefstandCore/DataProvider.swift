@@ -20,12 +20,14 @@ public protocol DataProvider {
 
 public extension DataProvider {
     /// The headline metric: discharge + groundwater aggregates fetched
-    /// concurrently, combined 50/50.
+    /// concurrently, combined 50/50. Resilient — if one domain fails
+    /// (e.g. a fallback source that lacks groundwater), the index is built
+    /// from whatever is available; it only throws when nothing is.
     func currentDrynessIndex() async throws -> DrynessIndex {
-        async let discharge = aggregate(for: .discharge)
-        async let groundwater = aggregate(for: .groundwater)
-        guard let index = DrynessIndex.combined(discharge: try await discharge,
-                                                groundwater: try await groundwater) else {
+        async let discharge: DomainAggregate? = try? await aggregate(for: .discharge)
+        async let groundwater: DomainAggregate? = try? await aggregate(for: .groundwater)
+        guard let index = DrynessIndex.combined(discharge: await discharge,
+                                                groundwater: await groundwater) else {
             throw DataProviderError.noData
         }
         return index

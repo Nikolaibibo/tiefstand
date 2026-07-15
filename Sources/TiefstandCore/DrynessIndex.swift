@@ -10,11 +10,12 @@ public struct DrynessIndex: Equatable {
     public let groundwaterScore: Double?
 
     /// Averages only the domains that currently have classified data.
-    /// Returns `nil` when neither domain has any classified station.
-    public static func combined(discharge: DomainAggregate,
-                                groundwater: DomainAggregate) -> DrynessIndex? {
-        let d = discharge.severityScore
-        let g = groundwater.severityScore
+    /// A `nil` aggregate (unavailable domain) or one with no classified
+    /// station is skipped. Returns `nil` when neither domain contributes.
+    public static func combined(discharge: DomainAggregate?,
+                                groundwater: DomainAggregate?) -> DrynessIndex? {
+        let d = discharge?.severityScore
+        let g = groundwater?.severityScore
         let scores = [d, g].compactMap { $0 }
         guard !scores.isEmpty else { return nil }
         let value = scores.reduce(0, +) / Double(scores.count)
