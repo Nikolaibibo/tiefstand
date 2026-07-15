@@ -6,7 +6,13 @@
 
 Germany now has a nationwide low-water information system, [**NIWIS**](https://niwis-online.de/), launched by the Federal Institute of Hydrology (BfG) on 15 July 2026. *Tiefstand* distills its data into one glanceable metric that lives in your menu bar, so you always know how dry the country's rivers and groundwater are right now.
 
-> ⚠️ **Work in progress.** This repository currently contains the project spec and scaffolding. The app is being built in the open.
+> ⚠️ **Work in progress.** The data layer and UI are built and tested; the Xcode app bundle is next. Built in the open.
+
+<p align="center">
+  <img src="docs/preview.png" width="360" alt="Tiefstand popover design preview">
+</p>
+
+<p align="center"><sub>Design preview with live NIWIS data (16 Jul 2026, index 49 · “Elevated”). A screenshot of the running menu-bar app follows with the Xcode bundle.</sub></p>
 
 ---
 

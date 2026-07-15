@@ -16,6 +16,14 @@ enum Hydro {
         return rgb.color
     }
 
+    /// A two-stop gradient around an index value, for gauge fills.
+    static func gradient(_ index: Double) -> LinearGradient {
+        let base = rampColor(index)
+        let light = rampColor(max(0, index - 22))
+        return LinearGradient(colors: [light, base],
+                              startPoint: .top, endPoint: .bottom)
+    }
+
     /// Discrete color per low-water class (for donut segments).
     static func classColor(_ c: LowWaterClass) -> Color {
         switch c {
