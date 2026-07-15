@@ -6,9 +6,11 @@ let package = Package(
     platforms: [.macOS(.v13)],
     products: [
         .library(name: "TiefstandCore", targets: ["TiefstandCore"]),
+        .executable(name: "Tiefstand", targets: ["Tiefstand"]),
     ],
     targets: [
         .target(name: "TiefstandCore"),
+        .executableTarget(name: "Tiefstand", dependencies: ["TiefstandCore"]),
         .testTarget(name: "TiefstandCoreTests", dependencies: ["TiefstandCore"]),
     ]
 )
