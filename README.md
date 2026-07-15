@@ -47,22 +47,25 @@ A `DataProvider` protocol abstracts the source, so PEGELONLINE transparently tak
 
 ## Build from source
 
-Requires macOS + Xcode.
+Requires macOS + Xcode (or the Swift toolchain).
 
 ```bash
 git clone https://github.com/Nikolaibibo/tiefstand.git
 cd tiefstand
-open Tiefstand.xcodeproj   # (coming soon)
+swift test     # run the TiefstandCore suite
+swift build    # build the app target
 ```
 
-> Notarized `.dmg` releases will follow. Until then, build from source or right-click → **Open** to bypass Gatekeeper on unsigned builds.
+> The app currently builds as a SwiftPM executable for verification. To run it as a real menu-bar item it will move into an Xcode app bundle (`LSUIElement`). Notarized `.dmg` releases will follow; until then, build from source.
 
 ## Roadmap
 
-- [ ] Data layer: `DataProvider` protocol + NIWIS client + models
-- [ ] Dryness Index + unit tests against live reference
-- [ ] Menu-bar item (number + color)
-- [ ] Popover dashboard (donuts + map + local station)
+- [x] Data layer: `DataProvider` protocol + NIWIS client + models
+- [x] Dryness Index + unit tests against live reference
+- [x] Menu-bar item (wave-fill glyph + number)
+- [x] Popover dashboard (index + per-domain donuts + local station)
+- [ ] Nearest gauge via CoreLocation + Germany map in the popover
+- [ ] Xcode app bundle (`LSUIElement`) so it runs as a menu-bar app
 - [ ] WidgetKit desktop widget
 - [ ] PEGELONLINE fallback provider
 - [ ] Hydro visual polish (light/dark)
