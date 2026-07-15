@@ -26,3 +26,6 @@ Carthage/Build/
 *.mobileprovision
 *.p12
 .env
+
+# Local swiftc test harness binary
+/testrunner
