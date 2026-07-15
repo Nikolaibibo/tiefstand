@@ -2,7 +2,7 @@ import Foundation
 
 /// A NIWIS national aggregate for one water domain: how many measuring
 /// stations fall into each low-water class right now.
-public struct DomainAggregate: Equatable {
+public struct DomainAggregate: Equatable, Decodable {
     public let keinNiedrigwasser: Int
     public let niedrig: Int
     public let sehrNiedrig: Int
