@@ -6,13 +6,17 @@
 
 Germany now has a nationwide low-water information system, [**NIWIS**](https://niwis-online.de/), launched by the Federal Institute of Hydrology (BfG) on 15 July 2026. *Tiefstand* distills its data into one glanceable metric that lives in your menu bar, so you always know how dry the country's rivers and groundwater are right now.
 
-> ⚠️ **Work in progress.** The data layer and UI are built and tested; the Xcode app bundle is next. Built in the open.
+> ⚠️ **Work in progress.** Runs as a real menu-bar app with live NIWIS data. Nearest-gauge (CoreLocation), the Germany map and a WidgetKit widget are next. Built in the open.
 
 <p align="center">
-  <img src="docs/preview.png" width="360" alt="Tiefstand popover design preview">
+  <img src="docs/preview.png" width="340" alt="Tiefstand popover with live NIWIS data">
 </p>
 
-<p align="center"><sub>Design preview with live NIWIS data (16 Jul 2026, index 49 · “Elevated”). A screenshot of the running menu-bar app follows with the Xcode bundle.</sub></p>
+<p align="center">
+  <img src="docs/menubar.png" width="140" alt="Tiefstand in the macOS menu bar">
+</p>
+
+<p align="center"><sub>The running menu-bar app with live NIWIS data (16 Jul 2026, index 45 · “Elevated”).</sub></p>
 
 ---
 
@@ -58,11 +62,12 @@ Requires macOS + Xcode (or the Swift toolchain).
 ```bash
 git clone https://github.com/Nikolaibibo/tiefstand.git
 cd tiefstand
-swift test     # run the TiefstandCore suite
-swift build    # build the app target
+swift test              # run the TiefstandCore suite
+Scripts/make-app.sh     # assemble build/Tiefstand.app and code-sign it
+open build/Tiefstand.app
 ```
 
-> The app currently builds as a SwiftPM executable for verification. To run it as a real menu-bar item it will move into an Xcode app bundle (`LSUIElement`). Notarized `.dmg` releases will follow; until then, build from source.
+> `make-app.sh` wraps the SwiftPM release binary into a real `.app` bundle (`LSUIElement`, ad-hoc signed) — no Xcode project and no paid Apple Developer account required. A notarized `.dmg` release will follow; until then, build from source.
 
 ## Roadmap
 
@@ -70,8 +75,8 @@ swift build    # build the app target
 - [x] Dryness Index + unit tests against live reference
 - [x] Menu-bar item (wave-fill glyph + number)
 - [x] Popover dashboard (index + per-domain donuts + local station)
+- [x] App bundle (`LSUIElement`) so it runs as a real menu-bar app
 - [ ] Nearest gauge via CoreLocation + Germany map in the popover
-- [ ] Xcode app bundle (`LSUIElement`) so it runs as a menu-bar app
 - [ ] WidgetKit desktop widget
 - [ ] PEGELONLINE fallback provider
 - [ ] Hydro visual polish (light/dark)
