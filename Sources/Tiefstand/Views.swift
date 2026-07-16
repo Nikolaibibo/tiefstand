@@ -1,6 +1,25 @@
 import SwiftUI
 import AppKit
+import ServiceManagement
 import TiefstandCore
+
+/// The NIWIS national low-water map — where the popover links out to.
+let niwisURL = URL(string: "https://niwis-online.de")!
+
+private func openExternally(_ url: URL) { NSWorkspace.shared.open(url) }
+
+/// Launch-at-login via the modern ServiceManagement API (macOS 13+).
+enum LoginItem {
+    static var isEnabled: Bool { SMAppService.mainApp.status == .enabled }
+    static func set(_ on: Bool) {
+        do {
+            if on { try SMAppService.mainApp.register() }
+            else { try SMAppService.mainApp.unregister() }
+        } catch {
+            NSLog("Tiefstand: login-item toggle failed: \(error.localizedDescription)")
+        }
+    }
+}
 
 // MARK: - Menu bar
 
@@ -171,6 +190,7 @@ struct WaveGauge: View {
 
 struct PopoverView: View {
     @ObservedObject var model: IndexModel
+    @State private var launchAtLogin = LoginItem.isEnabled
 
     private var level: DrynessLevel? { model.index.map { DrynessLevel(index: $0.value) } }
 
@@ -231,6 +251,7 @@ struct PopoverView: View {
                 Text("Germany").font(.caption2).foregroundStyle(.tertiary)
             }
         }
+        .help("National Dryness Index (0–100): the mean of the discharge and groundwater severity scores. Higher means drier.")
     }
 
     private func categorySection(discharge d: DomainAggregate, groundwater g: DomainAggregate) -> some View {
@@ -269,6 +290,23 @@ struct PopoverView: View {
             }
             .buttonStyle(.borderless)
             .disabled(model.isLoading)
+            .help("Refresh now")
+
+            Menu {
+                Button("Refresh") { Task { await model.refresh() } }
+                Button("View on NIWIS…") { openExternally(niwisURL) }
+                Divider()
+                Toggle("Launch at Login", isOn: $launchAtLogin)
+                Divider()
+                Button("Quit Tiefstand") { NSApplication.shared.terminate(nil) }
+            } label: {
+                Image(systemName: "ellipsis.circle").font(.caption)
+            }
+            .buttonStyle(.borderless)
+            .menuIndicator(.hidden)
+            .fixedSize()
+            .help("More")
+            .onChange(of: launchAtLogin) { LoginItem.set($0) }
         }
     }
 }
@@ -319,6 +357,7 @@ struct DomainCard: View {
         .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
             .strokeBorder(.white.opacity(0.06)))
+        .help("\(title) severity 0–100, averaged across stations. Dots: station count per class — normal · low · very low · extremely low.")
     }
 }
 
@@ -357,37 +396,53 @@ struct Donut: View {
 
 struct LocalStationCard: View {
     let station: StationReading
+    @State private var hovering = false
 
     var body: some View {
-        HStack(spacing: 12) {
-            ZStack {
-                Circle().fill((station.lowWaterClass.map(Hydro.classColor) ?? .gray).opacity(0.18))
-                    .frame(width: 34, height: 34)
-                Image(systemName: "mappin.circle.fill")
-                    .foregroundStyle(station.lowWaterClass.map(Hydro.classColor) ?? .gray)
+        Button { openExternally(niwisURL) } label: {
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle().fill((station.lowWaterClass.map(Hydro.classColor) ?? .gray).opacity(0.18))
+                        .frame(width: 34, height: 34)
+                    Image(systemName: "mappin.circle.fill")
+                        .foregroundStyle(station.lowWaterClass.map(Hydro.classColor) ?? .gray)
+                }
+                VStack(alignment: .leading, spacing: 1) {
+                    HStack(spacing: 4) {
+                        Text(station.name).font(.subheadline).fontWeight(.medium).lineLimit(1)
+                        Image(systemName: "arrow.up.forward")
+                            .font(.system(size: 8, weight: .bold))
+                            .foregroundStyle(.tertiary)
+                            .opacity(hovering ? 1 : 0.35)
+                    }
+                    Text("Driest discharge gauge").font(.caption2).foregroundStyle(.tertiary)
+                }
+                Spacer()
+                if let trend = station.trend {
+                    Image(systemName: trend.symbolName)
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(.secondary)
+                        .padding(6)
+                        .background(.quaternary.opacity(0.5), in: Circle())
+                }
+                if let value = station.currentValue {
+                    Text(String(format: "%.0f", value))
+                        .font(.system(.title3, design: .rounded)).fontWeight(.semibold)
+                        .monospacedDigit()
+                    + Text(" cm").font(.caption2).foregroundColor(.secondary)
+                }
             }
-            VStack(alignment: .leading, spacing: 1) {
-                Text(station.name).font(.subheadline).fontWeight(.medium).lineLimit(1)
-                Text("Driest discharge gauge").font(.caption2).foregroundStyle(.tertiary)
-            }
-            Spacer()
-            if let trend = station.trend {
-                Image(systemName: trend.symbolName)
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(.secondary)
-                    .padding(6)
-                    .background(.quaternary.opacity(0.5), in: Circle())
-            }
-            if let value = station.currentValue {
-                Text(String(format: "%.0f", value))
-                    .font(.system(.title3, design: .rounded)).fontWeight(.semibold)
-                    .monospacedDigit()
-                + Text(" cm").font(.caption2).foregroundColor(.secondary)
-            }
+            .padding(12)
+            .background(.quaternary.opacity(hovering ? 0.6 : 0.4), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(.white.opacity(0.06)))
+            .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
-        .padding(12)
-        .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
-            .strokeBorder(.white.opacity(0.06)))
+        .buttonStyle(.plain)
+        .onHover { inside in
+            hovering = inside
+            if inside { NSCursor.pointingHand.push() } else { NSCursor.pop() }
+        }
+        .help("\(station.name) — the driest discharge gauge right now. Click to open the NIWIS map.")
     }
 }

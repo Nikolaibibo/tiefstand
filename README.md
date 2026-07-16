@@ -55,6 +55,18 @@ A `DataProvider` protocol abstracts the source, so PEGELONLINE transparently tak
 - `DataProvider` protocol → `NIWISProvider` (primary) + `PEGELONLINEProvider` (fallback)
 - Index computation is pure and unit-tested against live reference values.
 
+## Download
+
+Grab the latest build from [**Releases**](https://github.com/Nikolaibibo/tiefstand/releases), unzip it, and drag **Tiefstand.app** into your Applications folder. It lives in the menu bar (no Dock icon); quit it from the **•••** menu inside the popover.
+
+**First launch.** The app isn't notarized yet (no paid Apple Developer account), so macOS flags it as coming from an unidentified developer. **Right-click the app → Open → Open** — once, and it remembers. Prefer the terminal? Clear the quarantine flag instead:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/Tiefstand.app
+```
+
+A notarized `.dmg` that opens with a plain double-click will follow.
+
 ## Build from source
 
 Requires macOS + Xcode (or the Swift toolchain).
