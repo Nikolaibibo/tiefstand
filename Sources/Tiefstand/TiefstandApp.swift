@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 import TiefstandCore
 
 @main
@@ -28,9 +29,44 @@ final class IndexModel: ObservableObject {
     @Published var updatedAt: Date?
 
     private let provider: DataProvider
+    private var autoRefreshTask: Task<Void, Never>?
+    private var wakeObserver: NSObjectProtocol?
 
     init(provider: DataProvider = NIWISProvider()) {
         self.provider = provider
+        startAutoRefreshing()
+        observeWake()
+    }
+
+    deinit {
+        autoRefreshTask?.cancel()
+        if let wakeObserver {
+            NSWorkspace.shared.notificationCenter.removeObserver(wakeObserver)
+        }
+    }
+
+    /// Kicks off a fresh pull whenever the Mac wakes from sleep — otherwise the
+    /// label could sit stale for up to a full poll interval after a lid-close.
+    private func observeWake() {
+        wakeObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didWakeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { await self?.refresh() }
+        }
+    }
+
+    /// Refreshes once immediately, then keeps polling in the background so the
+    /// menu-bar label stays current without the popover ever being opened.
+    func startAutoRefreshing(interval: Duration = .seconds(7200)) {
+        guard autoRefreshTask == nil else { return }
+        autoRefreshTask = Task { [weak self] in
+            while !Task.isCancelled {
+                await self?.refresh()
+                try? await Task.sleep(for: interval)
+            }
+        }
     }
 
     func refresh() async {

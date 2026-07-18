@@ -20,8 +20,8 @@ cd "$ROOT"
 
 APP_NAME="Tiefstand"
 BUNDLE_ID="com.nikolaibockholt.Tiefstand"
-VERSION="0.1.0"
-BUILD_NUMBER="1"
+VERSION="0.1.1"
+BUILD_NUMBER="2"
 MIN_MACOS="13.0"
 
 CONFIG="release"
