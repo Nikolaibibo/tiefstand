@@ -6,17 +6,21 @@
 
 Germany now has a nationwide low-water information system, [**NIWIS**](https://niwis-online.de/), launched by the Federal Institute of Hydrology (BfG) on 15 July 2026. *Tiefstand* distills its data into one glanceable metric that lives in your menu bar, so you always know how dry the country's rivers and groundwater are right now.
 
-> ⚠️ **Work in progress.** Runs as a real menu-bar app with live NIWIS data. Nearest-gauge (CoreLocation), the Germany map and a WidgetKit widget are next. Built in the open.
+> ⚠️ **Work in progress.** Runs as a real menu-bar app with live NIWIS data and a WidgetKit desktop widget. Nearest-gauge (CoreLocation) and the Germany map are next. Built in the open.
 
 <p align="center">
   <img src="docs/preview.png" width="340" alt="Tiefstand popover with live NIWIS data">
 </p>
 
 <p align="center">
-  <img src="docs/menubar.png" width="140" alt="Tiefstand in the macOS menu bar">
+  <img src="docs/widget.png" width="420" alt="Tiefstand desktop widgets (medium + small)">
 </p>
 
-<p align="center"><sub>The running menu-bar app with live NIWIS data (16 Jul 2026, index 45 · “Elevated”).</sub></p>
+<p align="center">
+  <img src="docs/menubar.png" width="120" alt="Tiefstand in the macOS menu bar">
+</p>
+
+<p align="center"><sub>Live NIWIS data, 23 Jul 2026 — national Dryness Index 50 · “High.” Menu-bar item, popover dashboard and the WidgetKit desktop widgets (medium + small).</sub></p>
 
 ---
 
@@ -108,7 +112,8 @@ Running it once registers the widget; add it via right-click desktop → **Edit 
 - [x] WidgetKit desktop widget (small + medium, shared wave-gauge)
 - [ ] PEGELONLINE fallback provider
 - [ ] Hydro visual polish (light/dark)
-- [ ] README screenshots + demo GIF, notarized release, landing page
+- [x] README screenshots (menu bar · popover · widget)
+- [ ] Demo GIF, notarized release, landing page
 
 ## Attribution & license
 
