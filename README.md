@@ -89,12 +89,13 @@ open build/Tiefstand.app
 `swift build` compiles the widget's code and tests, but a WidgetKit extension only *registers* with macOS when built through Xcode's signing/provisioning flow — a hand-assembled, ad-hoc-signed `.appex` is silently ignored by `pkd`. So the widget is the one part that goes through Xcode. To keep the repo free of a hand-maintained `.xcodeproj`, the project is generated from `project.yml` ([XcodeGen](https://github.com/yonaskolb/XcodeGen)):
 
 ```bash
-brew install xcodegen        # once
-xcodegen generate            # writes Tiefstand.xcodeproj (gitignored)
-open Tiefstand.xcodeproj      # then Product → Run (⌘R)
+brew install xcodegen                 # once
+export DEVELOPMENT_TEAM=XXXXXXXXXX     # your 10-char team id (see below)
+xcodegen generate                     # writes Tiefstand.xcodeproj (gitignored)
+open Tiefstand.xcodeproj               # then Product → Run (⌘R)
 ```
 
-Running it once registers the widget; add it via right-click desktop → **Edit Widgets** → **Tiefstand** (small or medium). Signing uses automatic provisioning — a **free** Apple ID works; set your team in `project.yml` (`DEVELOPMENT_TEAM`). A paid account is only needed for a notarized release that runs on other people's Macs.
+Running it once registers the widget; add it via right-click desktop → **Edit Widgets** → **Tiefstand** (small or medium). Signing uses automatic provisioning — a **free** Apple ID works. Find your team id with `security find-identity -v -p codesigning` (the 10-char code in parentheses) or Xcode → Settings → Accounts; `project.yml` reads it from the `DEVELOPMENT_TEAM` environment variable so it stays out of the repo. A paid account is only needed for a notarized release that runs on other people's Macs.
 
 ## Roadmap
 
