@@ -44,10 +44,12 @@ DrynessIndex       = (domainScore(discharge) + domainScore(groundwater)) / 2
 
 | | Source | Notes |
 |---|---|---|
-| Primary | [NIWIS](https://niwis-online.de/) (BfG) | Four-level classification, per-station trend, no auth |
+| Primary | [NIWIS](https://niwis-online.de/) (BfG) | Open reuse API, four-level classification, per-station trend, no auth |
 | Fallback | [PEGELONLINE](https://www.pegelonline.wsv.de/) (WSV) | Documented, stable; binary low/normal/high |
 
-A `DataProvider` protocol abstracts the source, so PEGELONLINE transparently takes over if the (newly launched, still-undocumented) NIWIS API changes.
+A `DataProvider` protocol abstracts the source, so PEGELONLINE transparently takes over if the NIWIS API — open for reuse, but not yet accompanied by a public OpenAPI spec — changes shape.
+
+**Well-behaved client.** *Tiefstand* reads only, polls at most every two hours, and sends an identifying `User-Agent` (`Tiefstand/0.1 (+this repo)`) so the BfG can attribute the traffic and reach out. Nothing is mirrored or redistributed — the app fetches the current national aggregate plus your local gauge, and nothing more.
 
 ## Architecture
 
@@ -96,6 +98,6 @@ open build/Tiefstand.app
 
 ## Attribution & license
 
-Water data © [NIWIS / Bundesanstalt für Gewässerkunde (BfG)](https://niwis-online.de/) and the respective federal-state authorities, and © [WSV / PEGELONLINE](https://www.pegelonline.wsv.de/). Used with attribution per the sources' terms. *Tiefstand* is an independent project and is not affiliated with or endorsed by the BfG or WSV.
+Water data © [NIWIS / Bundesanstalt für Gewässerkunde (BfG)](https://niwis-online.de/) and the respective federal-state authorities, and © [WSV / PEGELONLINE](https://www.pegelonline.wsv.de/). Used with attribution per the sources' terms (exact data-license designation to be confirmed with the BfG). *Tiefstand* is an independent project and is not affiliated with or endorsed by the BfG or WSV.
 
 Code licensed under the [MIT License](./LICENSE).
