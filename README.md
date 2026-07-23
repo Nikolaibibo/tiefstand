@@ -38,6 +38,7 @@ DrynessIndex       = (domainScore(discharge) + domainScore(groundwater)) / 2
 ```
 
 - **Discharge + groundwater, weighted 50/50** — two independent hydrological compartments ("surface" and "sub-surface"). Water level is deliberately excluded to avoid double-counting surface water; spring flow is shown in the dashboard but kept out of the headline (sparse, regional network).
+- **The four classes are treated as equally spaced** (none/low/very low/extreme → 0/1/2/3). NIWIS classifies each station by percentile thresholds against the 1991–2020 WMO reference period, but the exact class boundaries aren't published — so equal spacing is a deliberate *minimum-assumption* choice rather than inventing severity weights the source can't justify. A mean also compresses the distribution by design; the per-domain donuts in the popover show the full spread behind the single number.
 - The methodology is intentionally open so the number can be read, checked and challenged.
 
 ## Data sources
@@ -82,6 +83,18 @@ open build/Tiefstand.app
 ```
 
 > `make-app.sh` wraps the SwiftPM release binary into a real `.app` bundle (`LSUIElement`, ad-hoc signed) — no Xcode project and no paid Apple Developer account required. A notarized `.dmg` release will follow; until then, build from source.
+
+### The desktop widget (Xcode)
+
+`swift build` compiles the widget's code and tests, but a WidgetKit extension only *registers* with macOS when built through Xcode's signing/provisioning flow — a hand-assembled, ad-hoc-signed `.appex` is silently ignored by `pkd`. So the widget is the one part that goes through Xcode. To keep the repo free of a hand-maintained `.xcodeproj`, the project is generated from `project.yml` ([XcodeGen](https://github.com/yonaskolb/XcodeGen)):
+
+```bash
+brew install xcodegen        # once
+xcodegen generate            # writes Tiefstand.xcodeproj (gitignored)
+open Tiefstand.xcodeproj      # then Product → Run (⌘R)
+```
+
+Running it once registers the widget; add it via right-click desktop → **Edit Widgets** → **Tiefstand** (small or medium). Signing uses automatic provisioning — a **free** Apple ID works; set your team in `project.yml` (`DEVELOPMENT_TEAM`). A paid account is only needed for a notarized release that runs on other people's Macs.
 
 ## Roadmap
 

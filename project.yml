@@ -1,0 +1,81 @@
+# XcodeGen spec — the source of truth for the Xcode project.
+#
+# Tiefstand stays a pure SwiftPM package (Package.swift); this file exists ONLY
+# to produce an Xcode project for the one thing SwiftPM can't do: build + register
+# a WidgetKit extension through Apple's sanctioned toolchain. The app and widget
+# targets reuse the exact same source folders + the local package's library
+# products (TiefstandCore, TiefstandUI) — no duplicated code.
+#
+# Regenerate with:  xcodegen generate   (the .xcodeproj is gitignored)
+name: Tiefstand
+
+options:
+  bundleIdPrefix: com.nikolaibockholt
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    DEVELOPMENT_TEAM: Y8G3QMMZCC
+    CODE_SIGN_STYLE: Automatic
+    MARKETING_VERSION: "0.1.1"
+    CURRENT_PROJECT_VERSION: "2"
+    SWIFT_VERSION: "5.9"
+    ENABLE_HARDENED_RUNTIME: YES
+
+packages:
+  TiefstandKit:
+    path: .
+
+targets:
+  Tiefstand:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources/Tiefstand
+    dependencies:
+      - package: TiefstandKit
+        product: TiefstandCore
+      - package: TiefstandKit
+        product: TiefstandUI
+      - target: TiefstandWidget
+        embed: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.nikolaibockholt.Tiefstand
+    info:
+      path: build-xcode/Info-App.plist
+      properties:
+        CFBundleName: Tiefstand
+        CFBundleDisplayName: Tiefstand
+        LSUIElement: true
+        LSMinimumSystemVersion: "14.0"
+        NSHumanReadableCopyright: "© 2026 Nikolai Bockholt. MIT-licensed. Water data © NIWIS/BfG and WSV/PEGELONLINE."
+        NSLocationUsageDescription: "Tiefstand uses your location to find the nearest water gauge."
+
+  TiefstandWidget:
+    type: app-extension
+    platform: macOS
+    sources:
+      - path: Sources/TiefstandWidget
+    dependencies:
+      - package: TiefstandKit
+        product: TiefstandCore
+      - package: TiefstandKit
+        product: TiefstandUI
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.nikolaibockholt.Tiefstand.Widget
+    entitlements:
+      path: build-xcode/TiefstandWidget.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.network.client: true
+    info:
+      path: build-xcode/Info-Widget.plist
+      properties:
+        CFBundleName: TiefstandWidget
+        CFBundleDisplayName: Tiefstand
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension

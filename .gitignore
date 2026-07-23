@@ -29,3 +29,5 @@ Carthage/Build/
 
 # Local swiftc test harness binary
 /testrunner
+*.xcodeproj
+build-xcode/

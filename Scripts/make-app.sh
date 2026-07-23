@@ -26,6 +26,11 @@ VERSION="0.1.1"
 BUILD_NUMBER="2"
 MIN_MACOS="14.0"
 
+# Signing identity. Defaults to ad-hoc "-" (fine for the menu-bar app), but the
+# WidgetKit extension will only register with pkd when signed by a real identity.
+# Override with, e.g.:  CODESIGN_IDENTITY="Apple Development: you@id.com (TEAMID)"
+SIGN_ID="${CODESIGN_IDENTITY:--}"
+
 CONFIG="release"
 BUILD_DIR="$ROOT/build"
 APP="$BUILD_DIR/$APP_NAME.app"
@@ -101,6 +106,9 @@ cat > "$APPEX_CONTENTS/Info.plist" <<PLIST
     <key>CFBundleDisplayName</key>     <string>$APP_NAME</string>
     <key>CFBundleIdentifier</key>      <string>$WIDGET_BUNDLE_ID</string>
     <key>CFBundleExecutable</key>      <string>$WIDGET_NAME</string>
+    <key>CFBundleSupportedPlatforms</key> <array><string>MacOSX</string></array>
+    <key>CFBundleDevelopmentRegion</key><string>en</string>
+    <key>DTPlatformName</key>          <string>macosx</string>
     <key>CFBundlePackageType</key>     <string>XPC!</string>
     <key>CFBundleShortVersionString</key> <string>$VERSION</string>
     <key>CFBundleVersion</key>         <string>$BUILD_NUMBER</string>
@@ -116,9 +124,13 @@ cat > "$APPEX_CONTENTS/Info.plist" <<PLIST
 PLIST
 
 # ── Code-sign, inner-out: the .appex first, then the host app ───────────────
-echo "▸ Ad-hoc code-signing…"
-codesign --force --sign - --timestamp=none "$APPEX"
-codesign --force --sign - --timestamp=none "$APP"
+if [[ "$SIGN_ID" == "-" ]]; then
+  echo "▸ Code-signing (ad-hoc — widget won't register with pkd; set CODESIGN_IDENTITY)…"
+else
+  echo "▸ Code-signing with identity: $SIGN_ID"
+fi
+codesign --force --sign "$SIGN_ID" --timestamp=none "$APPEX"
+codesign --force --sign "$SIGN_ID" --timestamp=none "$APP"
 codesign --verify --verbose=1 "$APP"
 
 echo "✓ Built $APP (with $WIDGET_NAME.appex)"
