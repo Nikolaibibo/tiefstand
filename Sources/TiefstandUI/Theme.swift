@@ -2,10 +2,11 @@ import SwiftUI
 import TiefstandCore
 
 /// Hydro identity: a blue→red severity ramp. Wet/calm reads teal-blue,
-/// extreme drought reads deep red.
-enum Hydro {
+/// extreme drought reads deep red. Shared by the app and the widget so both
+/// speak the same visual language.
+public enum Hydro {
     /// Continuous ramp for an index value 0…100.
-    static func rampColor(_ index: Double) -> Color {
+    public static func rampColor(_ index: Double) -> Color {
         let t = max(0, min(1, index / 100))
         // teal → amber → red, interpolated in two legs.
         let cool = RGB(0.16, 0.62, 0.71)   // #29A0B5
@@ -17,7 +18,7 @@ enum Hydro {
     }
 
     /// A two-stop gradient around an index value, for gauge fills.
-    static func gradient(_ index: Double) -> LinearGradient {
+    public static func gradient(_ index: Double) -> LinearGradient {
         let base = rampColor(index)
         let light = rampColor(max(0, index - 22))
         return LinearGradient(colors: [light, base],
@@ -25,7 +26,7 @@ enum Hydro {
     }
 
     /// Discrete color per low-water class (for donut segments).
-    static func classColor(_ c: LowWaterClass) -> Color {
+    public static func classColor(_ c: LowWaterClass) -> Color {
         switch c {
         case .none:         return RGB(0.16, 0.62, 0.71).color
         case .low:          return RGB(0.95, 0.71, 0.22).color
@@ -36,7 +37,7 @@ enum Hydro {
 }
 
 extension DrynessLevel {
-    var color: Color {
+    public var color: Color {
         switch self {
         case .normal:   return Hydro.rampColor(12)
         case .elevated: return Hydro.rampColor(37)
@@ -47,7 +48,7 @@ extension DrynessLevel {
 }
 
 extension Trend {
-    var symbolName: String {
+    public var symbolName: String {
         switch self {
         case .rising:  return "arrow.up.right"
         case .falling: return "arrow.down.right"

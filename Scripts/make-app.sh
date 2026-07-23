@@ -19,10 +19,12 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
 APP_NAME="Tiefstand"
+WIDGET_NAME="TiefstandWidget"
 BUNDLE_ID="com.nikolaibockholt.Tiefstand"
+WIDGET_BUNDLE_ID="$BUNDLE_ID.Widget"
 VERSION="0.1.1"
 BUILD_NUMBER="2"
-MIN_MACOS="13.0"
+MIN_MACOS="14.0"
 
 CONFIG="release"
 BUILD_DIR="$ROOT/build"
@@ -72,11 +74,54 @@ cat > "$CONTENTS/Info.plist" <<PLIST
 </plist>
 PLIST
 
+# ── Widget extension ──────────────────────────────────────────────────────
+# WidgetKit desktop widgets ship as an .appex inside the host app's PlugIns.
+# We build the extension executable with SwiftPM and hand-assemble the bundle,
+# keeping the "no .xcodeproj" contract.
+echo "▸ Building $WIDGET_NAME ($CONFIG)…"
+swift build -c "$CONFIG" --product "$WIDGET_NAME"
+WIDGET_BIN="$(swift build -c "$CONFIG" --product "$WIDGET_NAME" --show-bin-path)/$WIDGET_NAME"
+if [[ ! -x "$WIDGET_BIN" ]]; then
+  echo "✗ Widget executable not found at $WIDGET_BIN" >&2
+  exit 1
+fi
+
+APPEX="$CONTENTS/PlugIns/$WIDGET_NAME.appex"
+APPEX_CONTENTS="$APPEX/Contents"
+echo "▸ Assembling $WIDGET_NAME.appex …"
+mkdir -p "$APPEX_CONTENTS/MacOS"
+cp "$WIDGET_BIN" "$APPEX_CONTENTS/MacOS/$WIDGET_NAME"
+
+cat > "$APPEX_CONTENTS/Info.plist" <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key>            <string>$WIDGET_NAME</string>
+    <key>CFBundleDisplayName</key>     <string>$APP_NAME</string>
+    <key>CFBundleIdentifier</key>      <string>$WIDGET_BUNDLE_ID</string>
+    <key>CFBundleExecutable</key>      <string>$WIDGET_NAME</string>
+    <key>CFBundlePackageType</key>     <string>XPC!</string>
+    <key>CFBundleShortVersionString</key> <string>$VERSION</string>
+    <key>CFBundleVersion</key>         <string>$BUILD_NUMBER</string>
+    <key>CFBundleInfoDictionaryVersion</key> <string>6.0</string>
+    <key>LSMinimumSystemVersion</key>  <string>$MIN_MACOS</string>
+    <key>NSExtension</key>
+    <dict>
+        <key>NSExtensionPointIdentifier</key>
+        <string>com.apple.widgetkit-extension</string>
+    </dict>
+</dict>
+</plist>
+PLIST
+
+# ── Code-sign, inner-out: the .appex first, then the host app ───────────────
 echo "▸ Ad-hoc code-signing…"
+codesign --force --sign - --timestamp=none "$APPEX"
 codesign --force --sign - --timestamp=none "$APP"
 codesign --verify --verbose=1 "$APP"
 
-echo "✓ Built $APP"
+echo "✓ Built $APP (with $WIDGET_NAME.appex)"
 
 if [[ "${1:-}" == "--run" ]]; then
   echo "▸ Launching…"

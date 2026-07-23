@@ -91,7 +91,7 @@ open build/Tiefstand.app
 - [x] Popover dashboard (index + per-domain donuts + local station)
 - [x] App bundle (`LSUIElement`) so it runs as a real menu-bar app
 - [ ] Nearest gauge via CoreLocation + Germany map in the popover
-- [ ] WidgetKit desktop widget
+- [x] WidgetKit desktop widget (small + medium, shared wave-gauge)
 - [ ] PEGELONLINE fallback provider
 - [ ] Hydro visual polish (light/dark)
 - [ ] README screenshots + demo GIF, notarized release, landing page
