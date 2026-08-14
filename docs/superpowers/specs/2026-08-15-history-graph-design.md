@@ -74,7 +74,7 @@ first click.
 |---|---|---|
 | Which series | **Both** | The gauge guarantees a non-empty first impression; the index accrues from day one instead of being deferred forever. |
 | Presentation | **In-place toggle** in the 320 pt popover | Smallest change, no window lifecycle in an `LSUIElement` app, feels native. |
-| Gauge identity | **Match, else nearest, else nothing** | NIWIS and PEGELONLINE share no IDs (§5). Coordinate match within 2 km counts as the same gauge; beyond that, the nearest gauge is shown *and labelled as such*; beyond 25 km, no series. |
+| Gauge identity | ~~Match, else nearest, else nothing~~ → **fixed reference gauge (Kaub · Rhein)** | Revised 2026-08-15 after measurement: matching leaves the tab empty for 80 % of the stations the app actually shows (§12, risk 1). NIWIS and PEGELONLINE share no IDs (§5), and PEGELONLINE covers federal waterways only. Kaub guarantees a full curve and is the country's reference gauge for low water. |
 | Time windows | **7 d · 30 d** | What was asked for, and PEGELONLINE's ceiling. Low water moves slowly; finer windows would add buttons without adding information. |
 | Chart | **Custom `Canvas`** | ~120 lines, matches `WaveGauge`/`Donut`, full control over the `DrynessLevel` bands. Swift Charts would need heavy restyling to fit `Hydro` and brings its own layout opinions into a 320 pt popover. |
 | Index storage | **Append-only JSON** in Application Support | Keeps `TiefstandCore` Foundation-only and unit-testable, following the pattern `WidgetRefresh.swift` already sets. SwiftData/SQLite is overkill for ~4,400 rows. |
@@ -246,6 +246,14 @@ ceiling is the difference between a useful fallback and a misleading one.
 
 ## 5. Why the gauge needs a bridge at all
 
+> [!contradiction] Gauge identity
+> **Design (14.08.):** match the NIWIS `localStation` to a PEGELONLINE gauge by coordinate.
+> **Measurement (15.08.):** 80 % of the driest NIWIS stations have no federal gauge within
+> 25 km → the tab would be empty most of the time (§12, risk 1).
+> → Resolved: the tab plots **Kaub · Rhein**, a fixed reference gauge. The matching design
+> below is kept because it is the CoreLocation path, and because it explains why the
+> obvious approach doesn't work.
+
 NIWIS station IDs look like `DESM_DEBY16607001`; PEGELONLINE uses UUIDs such as
 `b475386c-30cc-453a-b3b7-1d17ace13595`. There is no crosswalk, and NIWIS coordinates
 arrive as `{"x": lon, "y": lat}` (already modelled by `Coordinate`). Matching therefore
@@ -259,9 +267,10 @@ happens geographically:
 
 **Naming caveat.** `IndexModel.localStation` is currently *the driest discharge gauge in
 Germany*, not a nearby one — CoreLocation is still a TODO (`TiefstandApp.swift:86`). The
-tab is therefore labelled **"Gauge"**, not "Local gauge", and the subtitle keeps the
-existing card's wording ("Driest discharge gauge"). When CoreLocation lands, the label
-becomes accurate without a rename.
+tab is therefore labelled **"Gauge"**, not "Local gauge". With the reference-gauge decision
+the caption names the station outright ("KAUB · RHEIN"), so nothing in the UI claims the
+curve is local. When CoreLocation lands, `GaugeMatcher` supplies the user's nearest gauge
+and Kaub becomes the fallback for a denied or unavailable location.
 
 ## 6. Interaction
 
@@ -297,7 +306,7 @@ becomes accurate without a rename.
 | Condition | Screen |
 |---|---|
 | Gauge tab, fetch in flight | `ProgressView` at the chart's size — no layout jump |
-| Gauge tab, match > 25 km | "No gauge history near {station}" plus the distance |
+| Gauge tab, reference gauge missing from the station list | "Reference gauge unavailable" — should never happen; Kaub is a permanent federal gauge |
 | Gauge tab, request failed | Inline message in the existing footer style + a retry button; the last successful series stays on screen if there is one |
 | Index tab, coverage < 100 % | Chart of what exists, plus "recording since 15 Aug · 2 of 30 days" |
 | Index tab, fewer than 2 samples | "Recording started today — the curve appears after the next update" |
@@ -395,11 +404,29 @@ Deliberately excluded, to keep this one shippable change:
 
 ## 12. Risks
 
-1. **Match rate is unknown.** PEGELONLINE covers federal waterways (~700 gauges); NIWIS
-   also classifies state-operated stations. The current `localStation` is whichever gauge
-   in Germany is driest, so it may well sit far from any PEGELONLINE gauge. Mitigated by
-   the 25 km ceiling and honest labelling; the actual hit rate should be measured against
-   the live station list during implementation and recorded here.
+1. ~~**Match rate is unknown.**~~ **Measured 2026-08-15 — the risk landed, and it sank the
+   original plan for this tab.** Against 729 placeable PEGELONLINE gauges:
+
+   | Population | ≤ 2 km | ≤ 25 km | no match |
+   |---|---|---|---|
+   | All 357 NIWIS discharge stations | 65 (18 %) | 117 (33 %) | **175 (49 %)** |
+   | The 20 driest — i.e. what the app actually shows | — | 4 total | **16 (80 %)** |
+
+   PEGELONLINE covers **federal waterways only**. The driest gauges are almost all small
+   Bavarian rivers on state networks — Amper, Ammer, Strogen, Glonn, Traun, Salzach, Rott,
+   Bibert, Aisch, Tauber — sitting 30–110 km from the nearest federal gauge. The premise
+   that the gauge tab would always have real data was simply wrong.
+
+   **Decision (2026-08-15): the gauge tab plots a fixed reference gauge — Kaub on the
+   Rhine.** Kaub is Germany's canonical low-water bellwether, the gauge quoted in shipping
+   and news reporting, and it serves a complete 30-day series (43 → 6 cm over the month
+   measured). This keeps the tab's guarantee — a full curve on the very first open —
+   without CoreLocation, station matching, or a permission dialogue. It is not "your"
+   gauge, and the label says so.
+
+   `GaugeMatcher` (§4) stays in the codebase, tested but currently unused: it is exactly
+   what the CoreLocation roadmap item needs, and the numbers above are the reason it isn't
+   wired to `localStation` today.
 2. **The index curve is thin for weeks.** Accepted by design; the empty state names the
    reason. The gauge tab is the default on first open precisely so the first impression
    is a real curve.
