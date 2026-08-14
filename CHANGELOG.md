@@ -3,6 +3,12 @@
 ## Unreleased
 
 ### Added
+- **Longer windows on the index: 3, 6 and 12 months**, alongside 7 and 30 days.
+  Retention was already 400 days, so the log can hold them — they fill as the app
+  keeps running, and the "n of N days" caption says how far along that is. The gauge
+  keeps 7/30 days because PEGELONLINE serves a rolling month and **silently returns
+  that same month** for a longer request, which would label 30 days of data as a year.
+  Switching from a 12-month index view to the gauge clamps back to 30 days.
 - **Discharge and groundwater as curves** under the index, on the same 0–100 axis.
   The headline number is the mean of the two, so on its own it hides which
   compartment is driving it — these overlays show whether the gap between surface

@@ -18,13 +18,10 @@ final class HistoryModel: ObservableObject {
         var label: String { self == .gauge ? "Gauge" : "Index" }
     }
 
-    enum Window: String, CaseIterable, Identifiable {
-        case week, month
-        var id: String { rawValue }
-        var label: String { self == .week ? "7 d" : "30 d" }
-        var days: Int { self == .week ? 7 : 30 }
-        /// 160 points for a week; 31 for a month, which is one bucket per day.
-        var maxPoints: Int { self == .week ? 160 : 31 }
+    /// Windows the current tab can honestly show. The gauge is capped at a
+    /// month because PEGELONLINE serves no more (see `TrendWindow`).
+    var availableWindows: [TrendWindow] {
+        series == .index ? TrendWindow.index : TrendWindow.gauge
     }
 
     /// 3× the 2 h poll interval — anything longer is a real recording gap.
@@ -35,8 +32,16 @@ final class HistoryModel: ObservableObject {
 
     /// Gauge first: it has 30 days of real data on the very first open, while
     /// the index has only what this Mac has recorded so far.
-    @Published var series: Series = .gauge
-    @Published var window: Window = .month
+    @Published var series: Series = .gauge {
+        didSet {
+            // Leaving a 12-month index view for the gauge must not ask
+            // PEGELONLINE for a year — it would answer with a month and look
+            // like it worked.
+            let clamped = window.clamped(to: availableWindows)
+            if clamped != window { window = clamped }
+        }
+    }
+    @Published var window: TrendWindow = .month
     @Published private(set) var isLoading = false
     @Published private(set) var errorText: String?
     @Published private(set) var gauge: GaugeStation?
@@ -123,8 +128,15 @@ final class HistoryModel: ObservableObject {
             let samples = historyStore.load()
             guard let first = samples.first else { return "No samples recorded yet" }
             let covered = Int((indexSeries.coverage * Double(window.days)).rounded())
-            let since = first.timestamp.formatted(
-                .dateTime.day().month(.abbreviated).locale(Self.uiLocale))
+            // Include the year once the record reaches back into another one,
+            // or "Aug 15" reads as today rather than as a year ago.
+            let calendar = Calendar.current
+            var style = Date.FormatStyle.dateTime.day().month(.abbreviated)
+            if calendar.component(.year, from: first.timestamp)
+                != calendar.component(.year, from: Date()) {
+                style = style.year()
+            }
+            let since = first.timestamp.formatted(style.locale(Self.uiLocale))
             return "Recording since \(since) · \(covered) of \(window.days) days"
         case .gauge:
             guard let gauge else { return "" }
@@ -256,8 +268,8 @@ struct HistoryView: View {
     }
 
     private var windowPicker: some View {
-        HStack(spacing: 6) {
-            ForEach(HistoryModel.Window.allCases) { option in
+        HStack(spacing: 8) {
+            ForEach(model.availableWindows, id: \.rawValue) { option in
                 Button(option.label) { model.window = option }
                     .buttonStyle(.borderless)
                     .font(.caption2.weight(model.window == option ? .bold : .regular))

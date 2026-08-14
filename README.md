@@ -32,7 +32,7 @@ Germany now has a nationwide low-water information system, [**NIWIS**](https://n
 
 - **Menu bar:** the national **Dryness Index (0–100)**, color-coded, as a wave-fill indicator.
 - **Popover dashboard:** per-domain breakdown (discharge, groundwater, spring flow, water level), a Germany map, and your **local gauge** with its class, trend and current value.
-- **History:** click the index to switch to a **7- or 30-day trend** — the national index with **discharge and groundwater plotted underneath it**, so you can see which compartment is driving the number, plus the Rhine reference gauge at Kaub on its own tab.
+- **History:** click the index to switch to a trend view — **7 days to 12 months** — the national index with **discharge and groundwater plotted underneath it**, so you can see which compartment is driving the number, plus the Rhine reference gauge at Kaub on its own tab.
 - **Desktop widget:** the index at a glance via WidgetKit.
 - **Local option:** automatically resolves the nearest discharge + groundwater station via your location, or pin a favorite.
 

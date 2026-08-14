@@ -165,12 +165,32 @@ public struct TrendChart: View {
     /// bug rather than as localisation.
     private static let uiLocale = Locale(identifier: "en_US")
 
+    /// A 12-month window starts and ends in the same month of different years,
+    /// so day-and-month labels put "Aug 15" at both ends of the axis. When the
+    /// window straddles a year boundary the year has to be on the label.
+    private var spansMultipleYears: Bool {
+        let calendar = Calendar.current
+        return calendar.component(.year, from: series.window.lowerBound)
+            != calendar.component(.year, from: series.window.upperBound)
+    }
+
+    /// Past roughly two months the buckets are days wide, so a clock time on
+    /// the readout claims a precision the point doesn't have.
+    private var isCoarse: Bool {
+        series.window.upperBound.timeIntervalSince(series.window.lowerBound) > 60 * 86_400
+    }
+
     private func axisDate(_ date: Date) -> String {
-        date.formatted(.dateTime.day().month(.abbreviated).locale(Self.uiLocale))
+        spansMultipleYears
+            ? date.formatted(.dateTime.month(.abbreviated).year().locale(Self.uiLocale))
+            : date.formatted(.dateTime.day().month(.abbreviated).locale(Self.uiLocale))
     }
 
     private func readoutDate(_ date: Date) -> String {
-        date.formatted(.dateTime.day().month(.abbreviated).hour().minute().locale(Self.uiLocale))
+        var style = Date.FormatStyle.dateTime.day().month(.abbreviated)
+        if spansMultipleYears { style = style.year() }
+        if !isCoarse { style = style.hour().minute() }
+        return date.formatted(style.locale(Self.uiLocale))
     }
 
     /// Four evenly spaced dates across the window, outer two flush to the edges.
