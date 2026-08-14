@@ -22,8 +22,8 @@ APP_NAME="Tiefstand"
 WIDGET_NAME="TiefstandWidget"
 BUNDLE_ID="com.nikolaibockholt.Tiefstand"
 WIDGET_BUNDLE_ID="$BUNDLE_ID.Widget"
-VERSION="0.2.0"
-BUILD_NUMBER="3"
+VERSION="0.3.0"
+BUILD_NUMBER="4"
 MIN_MACOS="14.0"
 
 # Signing identity. Defaults to ad-hoc "-" (fine for the menu-bar app), but the
