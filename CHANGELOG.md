@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.3.0 — 2026-08-15
 
 ### Added
 - **Longer windows on the index: 3, 6 and 12 months**, alongside 7 and 30 days.
