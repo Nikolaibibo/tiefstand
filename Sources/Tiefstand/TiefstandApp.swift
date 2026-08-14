@@ -29,11 +29,14 @@ final class IndexModel: ObservableObject {
     @Published var updatedAt: Date?
 
     private let provider: DataProvider
+    private let history: IndexHistoryStoring
     private var autoRefreshTask: Task<Void, Never>?
     private var wakeObserver: NSObjectProtocol?
 
-    init(provider: DataProvider = NIWISProvider()) {
+    init(provider: DataProvider = NIWISProvider(),
+         history: IndexHistoryStoring = IndexHistoryStore()) {
         self.provider = provider
+        self.history = history
         startAutoRefreshing()
         observeWake()
     }
@@ -87,6 +90,13 @@ final class IndexModel: ObservableObject {
                     (lhs.lowWaterClass?.severityIndex ?? -1) < (rhs.lowWaterClass?.severityIndex ?? -1)
                 }
                 updatedAt = Date()
+            }
+
+            // The only place index history is ever created. A failed write must
+            // never surface as a refresh error: a missing sample is a gap in a
+            // chart, not a broken app.
+            if let index {
+                try? history.append(DrynessSample(index: index, timestamp: updatedAt ?? Date()))
             }
         } catch {
             errorText = error.localizedDescription
