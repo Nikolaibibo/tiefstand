@@ -19,7 +19,7 @@
 - Every outbound request sends `NIWISProvider.userAgent` (`"Tiefstand/0.1 (+https://github.com/Nikolaibibo/tiefstand)"`).
 - **Gauge history is fetched only on user action**, never on a timer. The app's own poll interval stays `7200` seconds (`IndexModel.startAutoRefreshing`).
 - `Canvas` renders fine inside the popover (`Donut` already uses it) but **not** in the `MenuBarExtra` label. Do not put `Canvas` in the label.
-- The existing 13 tests must stay green. Run `swift test` before every commit.
+- The existing 15 tests must stay green (verified 2026-08-15; an older note said 13). Run `swift test` before every commit.
 - Distance constants, verbatim: exact match tolerance **2 000 m**, hard ceiling **25 000 m**.
 - Retention, verbatim: **400 days** (`400 * 86_400` seconds).
 - Gap thresholds, verbatim: index **6 h** (`21_600`), gauge **3 h** (`10_800`).
@@ -46,10 +46,10 @@ Pure move, no logic change. `Views.swift` is 384 lines and the largest file in t
 
 ```bash
 cd ~/Documents/web/tiefstand
-swift test 2>&1 | tail -5
+swift test 2>&1 | grep -A1 "Test Suite 'All tests'"
 ```
 
-Expected: `Executed 13 tests, with 0 failures`. Write the number down — Task 1 must not change it.
+Expected: `Executed 15 tests, with 0 failures`. Write the number down — Task 1 must not change it.
 
 - [ ] **Step 2: Create `MenuBarGlyph.swift`**
 
@@ -100,7 +100,7 @@ Expected: `Build complete`. A "cannot find X in scope" error means a declaration
 - [ ] **Step 6: Verify nothing changed but the layout**
 
 ```bash
-swift test 2>&1 | tail -5
+swift test 2>&1 | grep -A1 "Test Suite 'All tests'"
 git diff --stat HEAD
 ```
 
@@ -396,7 +396,7 @@ public struct IndexHistoryStore: IndexHistoryStoring {
 - [ ] **Step 5: Run the tests to verify they pass**
 
 ```bash
-swift test --filter IndexHistoryStoreTests 2>&1 | tail -5
+swift test --filter IndexHistoryStoreTests 2>&1 | grep -A1 "Test Suite 'All tests'"
 ```
 
 Expected: `Executed 8 tests, with 0 failures`.
@@ -404,10 +404,10 @@ Expected: `Executed 8 tests, with 0 failures`.
 - [ ] **Step 6: Run the whole suite**
 
 ```bash
-swift test 2>&1 | tail -5
+swift test 2>&1 | grep -A1 "Test Suite 'All tests'"
 ```
 
-Expected: `Executed 21 tests, with 0 failures` (13 existing + 8 new).
+Expected: `Executed 23 tests, with 0 failures` (15 existing + 8 new).
 
 - [ ] **Step 7: Commit**
 
@@ -496,7 +496,7 @@ Expected: a JSON array with one object carrying `timestamp`, `index`, and both d
 - [ ] **Step 5: Run the suite and commit**
 
 ```bash
-swift test 2>&1 | tail -5
+swift test 2>&1 | grep -A1 "Test Suite 'All tests'"
 git add Sources/Tiefstand/TiefstandApp.swift
 git commit -m "feat(app): record a Dryness Index sample after each refresh
 
@@ -958,7 +958,7 @@ public extension TrendSeries {
 - [ ] **Step 4: Run the tests to verify they pass**
 
 ```bash
-swift test --filter TrendSeriesTests 2>&1 | tail -5
+swift test --filter TrendSeriesTests 2>&1 | grep -A1 "Test Suite 'All tests'"
 ```
 
 Expected: `Executed 13 tests, with 0 failures`.
@@ -970,7 +970,7 @@ If `test_dailyBucketsDoNotShatterAContinuousMonthIntoSegments` fails, `split` is
 - [ ] **Step 5: Run the whole suite and commit**
 
 ```bash
-swift test 2>&1 | tail -5
+swift test 2>&1 | grep -A1 "Test Suite 'All tests'"
 git add Sources/TiefstandCore/TrendSeries.swift Tests/TiefstandCoreTests/TrendSeriesTests.swift
 git commit -m "feat(core): TrendSeries — filter, downsample, split on gaps (TDD)
 
@@ -980,7 +980,7 @@ weekend with the lid shut reads as a gap, not as interpolated data.
 Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 ```
 
-Expected: `Executed 34 tests, with 0 failures`.
+Expected: `Executed 36 tests, with 0 failures`.
 
 ---
 
@@ -1327,7 +1327,7 @@ Note the `Envelope` uses the default date strategy on both sides, so encoding an
 - [ ] **Step 4: Run the tests to verify they pass**
 
 ```bash
-swift test --filter GaugeHistoryTests 2>&1 | tail -5
+swift test --filter GaugeHistoryTests 2>&1 | grep -A1 "Test Suite 'All tests'"
 ```
 
 Expected: `Executed 8 tests, with 0 failures`.
@@ -1347,7 +1347,7 @@ Expected: a JSON array of `{"timestamp": "...", "value": ...}` objects. If the s
 - [ ] **Step 6: Run the whole suite and commit**
 
 ```bash
-swift test 2>&1 | tail -5
+swift test 2>&1 | grep -A1 "Test Suite 'All tests'"
 git add Sources/TiefstandCore/GaugeHistory.swift Tests/TiefstandCoreTests/GaugeHistoryTests.swift
 git commit -m "feat(core): PEGELONLINE gauge history + station cache (TDD)
 
@@ -1357,7 +1357,7 @@ The station list is cached on disk for 30 days — it is 262 KB and static.
 Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 ```
 
-Expected: `Executed 42 tests, with 0 failures`.
+Expected: `Executed 44 tests, with 0 failures`.
 
 ---
 
@@ -1534,7 +1534,7 @@ public enum GaugeMatcher {
 - [ ] **Step 4: Run the tests to verify they pass**
 
 ```bash
-swift test --filter GaugeMatcherTests 2>&1 | tail -5
+swift test --filter GaugeMatcherTests 2>&1 | grep -A1 "Test Suite 'All tests'"
 ```
 
 Expected: `Executed 8 tests, with 0 failures`.
@@ -1576,7 +1576,7 @@ Record the three numbers in the spec under risk 1, replacing "should be measured
 - [ ] **Step 6: Run the whole suite and commit**
 
 ```bash
-swift test 2>&1 | tail -5
+swift test 2>&1 | grep -A1 "Test Suite 'All tests'"
 git add Sources/TiefstandCore/GaugeMatcher.swift \
         Tests/TiefstandCoreTests/GaugeMatcherTests.swift \
         docs/superpowers/specs/2026-08-15-history-graph-design.md
@@ -1588,7 +1588,7 @@ gauge within 2 km, disclosed fallback to 25 km, nothing beyond that.
 Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 ```
 
-Expected: `Executed 50 tests, with 0 failures`.
+Expected: `Executed 52 tests, with 0 failures`.
 
 ---
 
@@ -2259,7 +2259,7 @@ Check each, in order:
 - [ ] **Step 6: Run the suite and commit**
 
 ```bash
-swift test 2>&1 | tail -5
+swift test 2>&1 | grep -A1 "Test Suite 'All tests'"
 git add Sources/Tiefstand/HistoryView.swift Sources/Tiefstand/PopoverView.swift
 git commit -m "feat(app): history screen behind the headline number
 
@@ -2269,7 +2269,7 @@ and Index (self-recorded). Fetches only on user action, cached for an hour.
 Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 ```
 
-Expected: still `Executed 50 tests, with 0 failures`.
+Expected: still `Executed 52 tests, with 0 failures`.
 
 ---
 
@@ -2369,7 +2369,7 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 After Task 9:
 
 ```bash
-swift test 2>&1 | tail -5          # expect 50 tests, 0 failures
+swift test 2>&1 | grep -A1 "Test Suite 'All tests'"          # expect 52 tests, 0 failures
 swift build 2>&1 | tail -3         # expect Build complete
 ./Scripts/make-app.sh --run        # walk the seven checks from Task 8, Step 5
 git log --oneline -9               # expect one commit per task
