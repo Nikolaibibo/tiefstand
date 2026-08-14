@@ -6,7 +6,7 @@
 
 Germany now has a nationwide low-water information system, [**NIWIS**](https://niwis-online.de/), launched by the Federal Institute of Hydrology (BfG) on 15 July 2026. *Tiefstand* distills its data into one glanceable metric that lives in your menu bar, so you always know how dry the country's rivers and groundwater are right now.
 
-> ⚠️ **Work in progress.** Runs as a real menu-bar app with live NIWIS data and a WidgetKit desktop widget. Nearest-gauge (CoreLocation) and the Germany map are next. Built in the open.
+> ⚠️ **Work in progress.** Runs as a real menu-bar app with live NIWIS data, a 7/30-day history view and a WidgetKit desktop widget. Nearest-gauge (CoreLocation) and the Germany map are next. Built in the open.
 
 <p align="center">
   <img src="docs/preview.png" width="340" alt="Tiefstand popover with live NIWIS data">
@@ -24,7 +24,7 @@ Germany now has a nationwide low-water information system, [**NIWIS**](https://n
   <img src="docs/menubar.png" width="120" alt="Tiefstand in the macOS menu bar">
 </p>
 
-<p align="center"><sub>Live data. Popover dashboard (NIWIS, 23 Jul 2026 — index 50 · “High”), the history view (Kaub/Rhein falling from 94 to −1 cm over 30 days, 15 Aug 2026), the WidgetKit desktop widgets and the menu-bar item.</sub></p>
+<p align="center"><sub>Live data, 15 Aug 2026. Popover dashboard (index 62 · “High” — discharge 71, groundwater 53), the history view (Kaub/Rhein falling from 94 to −1 cm over 30 days), the WidgetKit desktop widgets and the menu-bar item.</sub></p>
 
 ---
 
@@ -117,11 +117,12 @@ Running it once registers the widget; add it via right-click desktop → **Edit 
 - [x] Menu-bar item (wave-fill glyph + number)
 - [x] Popover dashboard (index + per-domain donuts + local station)
 - [x] App bundle (`LSUIElement`) so it runs as a real menu-bar app
-- [ ] Nearest gauge via CoreLocation + Germany map in the popover
+- [x] History view: 7/30-day trends (index recorded locally, gauge from PEGELONLINE)
+- [ ] Nearest gauge via CoreLocation + Germany map in the popover — `GaugeMatcher` is already built and tested for this
 - [x] WidgetKit desktop widget (small + medium, shared wave-gauge)
-- [ ] PEGELONLINE fallback provider
+- [ ] PEGELONLINE fallback provider — the mapper exists (`PEGELONLINEMapper`), it isn't wired up as a `DataProvider` yet
 - [ ] Hydro visual polish (light/dark)
-- [x] README screenshots (menu bar · popover · widget)
+- [x] README screenshots (menu bar · popover · history · widget)
 - [ ] Demo GIF, notarized release, landing page
 
 ## Attribution & license
