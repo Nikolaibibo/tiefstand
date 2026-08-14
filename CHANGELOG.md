@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.2.0 — 2026-08-15
 
 ### Added
 - **History view in the popover.** Click the index to switch to a 7- or 30-day trend:
