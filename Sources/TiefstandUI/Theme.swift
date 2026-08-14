@@ -25,6 +25,25 @@ public enum Hydro {
                               startPoint: .top, endPoint: .bottom)
     }
 
+    /// Tints for the per-domain overlay curves in the history chart.
+    ///
+    /// Deliberately **outside** the teal→amber→red severity ramp: these lines
+    /// say *which compartment*, not *how severe*. Borrowing a ramp color would
+    /// invite reading the line's hue as a position on the 0–100 scale, which it
+    /// isn't. Blue for surface water, violet for what sits beneath it.
+    public static let dischargeTint = RGB(0.30, 0.55, 0.85).color
+    public static let groundwaterTint = RGB(0.55, 0.48, 0.78).color
+
+    /// The overlay tint for a metric, or `nil` for the index — which keeps its
+    /// value-driven ramp color as the headline curve.
+    public static func overlayTint(_ metric: DrynessMetric) -> Color? {
+        switch metric {
+        case .index:       return nil
+        case .discharge:   return dischargeTint
+        case .groundwater: return groundwaterTint
+        }
+    }
+
     /// Discrete color per low-water class (for donut segments).
     public static func classColor(_ c: LowWaterClass) -> Color {
         switch c {

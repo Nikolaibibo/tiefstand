@@ -66,14 +66,31 @@ final class HistoryModel: ObservableObject {
         return end.addingTimeInterval(-Double(days) * 86_400)...end
     }
 
-    var indexSeries: TrendSeries {
-        let points = historyStore.load().map { TrendPoint(date: $0.timestamp, value: $0.index) }
-        return .make(from: points,
-                     window: range(forDays: window.days),
-                     gapThreshold: Self.indexGapThreshold,
-                     maxPoints: window.maxPoints,
-                     yScale: .fixed(0...100),
-                     unit: "")
+    func series(for metric: DrynessMetric) -> TrendSeries {
+        .make(from: historyStore.load().points(for: metric),
+              window: range(forDays: window.days),
+              gapThreshold: Self.indexGapThreshold,
+              maxPoints: window.maxPoints,
+              yScale: .fixed(0...100),
+              unit: "")
+    }
+
+    var indexSeries: TrendSeries { series(for: .index) }
+
+    /// Discharge and groundwater under the index, on the same 0–100 axis.
+    ///
+    /// The headline number is the mean of these two, so on its own it hides
+    /// which compartment is driving it. The donuts show that split for right
+    /// now; these curves show whether the gap between surface and sub-surface
+    /// water is widening or closing.
+    var domainOverlays: [TrendOverlay] {
+        [DrynessMetric.discharge, .groundwater].compactMap { metric in
+            guard let color = Hydro.overlayTint(metric) else { return nil }
+            let series = series(for: metric)
+            guard !series.isEmpty else { return nil }
+            return TrendOverlay(id: metric.rawValue, series: series,
+                                label: metric.label, color: color)
+        }
     }
 
     var gaugeSeries: TrendSeries {
@@ -212,9 +229,13 @@ struct HistoryView: View {
                 message("Recording started today — the curve appears after the next update")
             } else if model.currentSeries.isEmpty {
                 message("No readings for this window")
-            } else {
+            } else if model.series == .index {
                 TrendChart(series: model.currentSeries,
-                           showsSeverityBands: model.series == .index)
+                           showsSeverityBands: true,
+                           overlays: model.domainOverlays,
+                           legendLabel: model.domainOverlays.isEmpty ? nil : "Index")
+            } else {
+                TrendChart(series: model.currentSeries, showsSeverityBands: false)
             }
         }
         .frame(height: 132)

@@ -7,19 +7,52 @@ import TiefstandCore
 ///
 /// Each `TrendSegment` becomes its own path, so a recording gap shows as a
 /// break rather than a line through data that was never measured.
+/// A secondary curve drawn behind the headline series, on the same axes.
+///
+/// Only ever used for series that genuinely share the main one's scale — the
+/// per-domain 0–100 scores under the index. Centimetres and a 0–100 score have
+/// no common axis, and forcing one with a second scale invites reading a
+/// correlation that isn't there.
+public struct TrendOverlay: Identifiable {
+    public let id: String
+    public let series: TrendSeries
+    public let label: String
+    public let color: Color
+
+    public init(id: String, series: TrendSeries, label: String, color: Color) {
+        self.id = id
+        self.series = series
+        self.label = label
+        self.color = color
+    }
+}
+
 public struct TrendChart: View {
     private let series: TrendSeries
     private let showsSeverityBands: Bool
+    private let overlays: [TrendOverlay]
+    private let legendLabel: String?
 
     /// The point under the cursor, or `nil` when not hovering.
     @State private var hovered: TrendPoint?
 
-    /// - Parameter showsSeverityBands: draws the four `DrynessLevel` bands
-    ///   behind the curve. Meaningful for the 0–100 index, meaningless for
-    ///   centimetres.
-    public init(series: TrendSeries, showsSeverityBands: Bool) {
+    /// - Parameters:
+    ///   - showsSeverityBands: draws the four `DrynessLevel` bands behind the
+    ///     curve. Meaningful for the 0–100 index, meaningless for centimetres.
+    ///   - overlays: secondary curves on the same axes; drawn behind and
+    ///     thinner, with no area fill, so the headline series stays the figure
+    ///     and they stay the ground.
+    ///   - legendLabel: name for the headline series in the legend. Pass `nil`
+    ///     to omit the legend entirely (there is nothing to disambiguate when
+    ///     there are no overlays).
+    public init(series: TrendSeries,
+                showsSeverityBands: Bool,
+                overlays: [TrendOverlay] = [],
+                legendLabel: String? = nil) {
         self.series = series
         self.showsSeverityBands = showsSeverityBands
+        self.overlays = overlays
+        self.legendLabel = legendLabel
     }
 
     private var bounds: ClosedRange<Double> {
@@ -52,6 +85,7 @@ public struct TrendChart: View {
                 }
             }
             xAxisLabels
+            if let legendLabel { legend(headline: legendLabel) }
         }
     }
 
@@ -60,11 +94,44 @@ public struct TrendChart: View {
             let rect = CGRect(origin: .zero, size: size)
             if showsSeverityBands { drawSeverityBands(&ctx, in: rect) }
             drawGridLines(&ctx, in: rect)
+            // Overlays first so the headline series reads on top of them.
+            for overlay in overlays {
+                for segment in overlay.series.segments {
+                    drawOverlaySegment(segment, color: overlay.color, &ctx, in: rect)
+                }
+            }
             for segment in series.segments {
                 drawSegment(segment, &ctx, in: rect)
             }
             if let hovered { drawCrosshair(hovered, &ctx, in: rect) }
         }
+    }
+
+    // MARK: legend
+
+    private func legend(headline: String) -> some View {
+        HStack(spacing: 10) {
+            legendItem(headline, color: Hydro.rampColor(headlineMean), bold: true)
+            ForEach(overlays) { overlay in
+                legendItem(overlay.label, color: overlay.color, bold: false)
+            }
+            Spacer(minLength: 0)
+        }
+    }
+
+    private func legendItem(_ label: String, color: Color, bold: Bool) -> some View {
+        HStack(spacing: 3) {
+            Capsule().fill(color).frame(width: bold ? 9 : 7, height: bold ? 2.5 : 1.5)
+            Text(label)
+                .font(.system(size: 8, weight: bold ? .semibold : .regular))
+                .foregroundStyle(Color.secondary.opacity(bold ? 1 : 0.7))
+        }
+    }
+
+    private var headlineMean: Double {
+        let values = series.allPoints.map(\.value)
+        guard !values.isEmpty else { return 20 }
+        return values.reduce(0, +) / Double(values.count)
     }
 
     // MARK: axes
@@ -138,10 +205,35 @@ public struct TrendChart: View {
         }
     }
 
+    /// The nearest overlay point to a given instant, when one is close enough
+    /// to be about the same moment. A stale value from three days away would
+    /// read as a simultaneous measurement, which is the one thing a shared
+    /// crosshair must not imply.
+    private func overlayValue(_ overlay: TrendOverlay, near date: Date) -> Double? {
+        guard let nearest = overlay.series.allPoints.min(by: {
+            abs($0.date.timeIntervalSince(date)) < abs($1.date.timeIntervalSince(date))
+        }) else { return nil }
+
+        let window = series.window.upperBound.timeIntervalSince(series.window.lowerBound)
+        let tolerance = window / 40   // ~4 h on a week, ~18 h on a month
+        guard abs(nearest.date.timeIntervalSince(date)) <= tolerance else { return nil }
+        return nearest.value
+    }
+
     private func readout(for point: TrendPoint) -> some View {
         let stamp = readoutDate(point.date)
         let value = String(format: "%.0f", point.value)
-        return Text(series.unit.isEmpty ? "\(stamp) · \(value)" : "\(stamp) · \(value) \(series.unit)")
+        let head = series.unit.isEmpty ? "\(stamp) · \(value)" : "\(stamp) · \(value) \(series.unit)"
+
+        return HStack(spacing: 5) {
+            Text(head)
+            ForEach(overlays) { overlay in
+                if let value = overlayValue(overlay, near: point.date) {
+                    Text("\(overlay.label.prefix(1)) \(String(format: "%.0f", value))")
+                        .foregroundStyle(overlay.color)
+                }
+            }
+        }
             .font(.system(size: 9, design: .rounded))
             .monospacedDigit()
             .padding(.horizontal, 5)
@@ -243,6 +335,30 @@ public struct TrendChart: View {
             endPoint: CGPoint(x: 0, y: rect.maxY)))
         ctx.stroke(line, with: .color(color),
                    style: StrokeStyle(lineWidth: 1.8, lineCap: .round, lineJoin: .round))
+    }
+
+    /// Thinner, flatter, no area fill — an overlay is context for the headline
+    /// curve, not a competitor to it.
+    private func drawOverlaySegment(_ segment: TrendSegment,
+                                    color: Color,
+                                    _ ctx: inout GraphicsContext,
+                                    in rect: CGRect) {
+        let points = segment.points.map {
+            CGPoint(x: x(for: $0.date, in: rect), y: y(for: $0.value, in: rect))
+        }
+        guard let first = points.first else { return }
+
+        guard points.count > 1 else {
+            let dot = CGRect(x: first.x - 1.5, y: first.y - 1.5, width: 3, height: 3)
+            ctx.fill(Path(ellipseIn: dot), with: .color(color.opacity(0.8)))
+            return
+        }
+
+        var line = Path()
+        line.move(to: first)
+        for point in points.dropFirst() { line.addLine(to: point) }
+        ctx.stroke(line, with: .color(color.opacity(0.85)),
+                   style: StrokeStyle(lineWidth: 1.1, lineCap: .round, lineJoin: .round))
     }
 
     /// Index segments take their color from the mean value on the hydro ramp;

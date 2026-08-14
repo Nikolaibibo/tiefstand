@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- **Discharge and groundwater as curves** under the index, on the same 0–100 axis.
+  The headline number is the mean of the two, so on its own it hides which
+  compartment is driving it — these overlays show whether the gap between surface
+  and sub-surface water is widening or closing. The hover readout gives all three
+  values at once. The samples have carried both scores since the history feature
+  shipped, so the curves reach back over the whole recorded period.
+
 ## v0.2.0 — 2026-08-15
 
 ### Added
