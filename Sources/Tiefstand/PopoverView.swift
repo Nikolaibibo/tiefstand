@@ -26,13 +26,36 @@ enum LoginItem {
 
 struct PopoverView: View {
     @ObservedObject var model: IndexModel
+    @StateObject private var history = HistoryModel()
     @State private var launchAtLogin = LoginItem.isEnabled
+    @State private var showingHistory = false
+    @State private var headerHovering = false
 
     private var level: DrynessLevel? { model.index.map { DrynessLevel(index: $0.value) } }
 
     var body: some View {
+        Group {
+            if showingHistory {
+                HistoryView(model: history, onBack: { showingHistory = false })
+            } else {
+                dashboard
+            }
+        }
+        .padding(18)
+        .background(background)
+        .animation(.easeInOut(duration: 0.18), value: showingHistory)
+    }
+
+    private var dashboard: some View {
         VStack(alignment: .leading, spacing: 16) {
-            header
+            Button { showingHistory = true } label: { header }
+                .buttonStyle(.plain)
+                .background(.quaternary.opacity(headerHovering ? 0.4 : 0),
+                            in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .onHover { inside in
+                    headerHovering = inside
+                    if inside { NSCursor.pointingHand.push() } else { NSCursor.pop() }
+                }
             if let d = model.discharge, let g = model.groundwater {
                 categorySection(discharge: d, groundwater: g)
             } else if model.isLoading {
@@ -43,8 +66,6 @@ struct PopoverView: View {
             }
             footer
         }
-        .padding(18)
-        .background(background)
         .task { await model.refresh() }
     }
 
@@ -85,9 +106,13 @@ struct PopoverView: View {
                 Image(systemName: "drop.fill").foregroundStyle(Hydro.rampColor(value ?? 0))
                 Text("Dryness").font(.caption2).foregroundStyle(.secondary)
                 Text("Germany").font(.caption2).foregroundStyle(.tertiary)
+                Image(systemName: "chart.xyaxis.line")
+                    .font(.system(size: 9))
+                    .foregroundStyle(.tertiary)
+                    .opacity(headerHovering ? 1 : 0)
             }
         }
-        .help("National Dryness Index (0–100): the mean of the discharge and groundwater severity scores. Higher means drier.")
+        .help("National Dryness Index (0–100): the mean of the discharge and groundwater severity scores. Higher means drier. Click for the 7- and 30-day trend.")
     }
 
     private func categorySection(discharge d: DomainAggregate, groundwater g: DomainAggregate) -> some View {

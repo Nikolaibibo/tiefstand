@@ -92,6 +92,20 @@ public struct TrendChart: View {
             .background(.background.opacity(0.5), in: RoundedRectangle(cornerRadius: 3))
     }
 
+    /// The whole UI is English, so axis and readout dates are too. Without an
+    /// explicit locale `.formatted` follows the system language and a German
+    /// Mac renders "27. Juli" next to "Water level" — mixed, and it reads as a
+    /// bug rather than as localisation.
+    private static let uiLocale = Locale(identifier: "en_US")
+
+    private func axisDate(_ date: Date) -> String {
+        date.formatted(.dateTime.day().month(.abbreviated).locale(Self.uiLocale))
+    }
+
+    private func readoutDate(_ date: Date) -> String {
+        date.formatted(.dateTime.day().month(.abbreviated).hour().minute().locale(Self.uiLocale))
+    }
+
     /// Four evenly spaced dates across the window, outer two flush to the edges.
     private var xTicks: [Date] {
         let lower = series.window.lowerBound
@@ -102,7 +116,7 @@ public struct TrendChart: View {
     private var xAxisLabels: some View {
         HStack(spacing: 0) {
             ForEach(Array(xTicks.enumerated()), id: \.offset) { index, date in
-                Text(date.formatted(.dateTime.day().month(.abbreviated)))
+                Text(axisDate(date))
                     .font(.system(size: 8))
                     .foregroundStyle(.tertiary)
                     .frame(maxWidth: .infinity,
@@ -125,7 +139,7 @@ public struct TrendChart: View {
     }
 
     private func readout(for point: TrendPoint) -> some View {
-        let stamp = point.date.formatted(.dateTime.day().month(.abbreviated).hour().minute())
+        let stamp = readoutDate(point.date)
         let value = String(format: "%.0f", point.value)
         return Text(series.unit.isEmpty ? "\(stamp) · \(value)" : "\(stamp) · \(value) \(series.unit)")
             .font(.system(size: 9, design: .rounded))
