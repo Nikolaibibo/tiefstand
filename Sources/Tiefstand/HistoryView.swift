@@ -116,10 +116,33 @@ final class HistoryModel: ObservableObject {
     /// since".
     private static let uiLocale = Locale(identifier: "en_US")
 
-    /// A lone dot on an empty month reads as a rendering glitch rather than as
-    /// data, so the index tab shows its explanation until there are at least
-    /// two points to draw a line between.
-    var indexIsTooSparseToPlot: Bool { indexSeries.allPoints.count < 2 }
+    /// Whether there is too little recorded time to draw anything meaningful.
+    ///
+    /// Counting *points* was the wrong test: 32 samples recorded over 65
+    /// minutes pass a "more than one point" check and then render as an
+    /// invisible smudge against the right-hand edge of a 7-day axis. What
+    /// matters is how much of the window they span, so the guard is coverage:
+    /// under 2 % — a couple of hours on a week, half a day on a month — the
+    /// explanation is more use than the curve.
+    var indexIsTooSparseToPlot: Bool {
+        indexSeries.allPoints.count < 2 || indexSeries.coverage < 0.02
+    }
+
+    /// Says how long the app has actually been recording, rather than the flat
+    /// "started today" — after a day of running, "started today" would be a
+    /// lie and the user would still see no curve.
+    var sparseExplanation: String {
+        let samples = historyStore.load()
+        guard let first = samples.first, let last = samples.last else {
+            return "Nothing recorded yet — the first sample lands on the next refresh"
+        }
+        let minutes = Int(last.timestamp.timeIntervalSince(first.timestamp) / 60)
+        let span = minutes < 90
+            ? "\(max(minutes, 1)) min"
+            : "\(minutes / 60) h"
+        return "Only \(span) recorded so far — NIWIS publishes no back history, "
+             + "so this curve has to be built up as the app runs"
+    }
 
     /// "Recording since 3 Aug · 12 of 30 days", or the gauge's provenance.
     var caption: String {
@@ -238,7 +261,7 @@ struct HistoryView: View {
             if model.series == .gauge && model.gaugeUnavailable {
                 message("Reference gauge unavailable")
             } else if model.series == .index && model.indexIsTooSparseToPlot {
-                message("Recording started today — the curve appears after the next update")
+                message(model.sparseExplanation)
             } else if model.currentSeries.isEmpty {
                 message("No readings for this window")
             } else if model.series == .index {

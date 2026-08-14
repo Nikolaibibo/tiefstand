@@ -31,7 +31,7 @@ Germany now has a nationwide low-water information system, [**NIWIS**](https://n
 ## What it does
 
 - **Menu bar:** the national **Dryness Index (0–100)**, color-coded, as a wave-fill indicator.
-- **Popover dashboard:** per-domain breakdown (discharge, groundwater, spring flow, water level), a Germany map, and your **local gauge** with its class, trend and current value.
+- **Popover dashboard:** per-domain breakdown, a **map of all 357 gauges** coloured by low-water class — point at one for its reading — and your **local gauge** with its class, trend and current value.
 - **History:** click the index to switch to a trend view — **7 days to 12 months** — the national index with **discharge and groundwater plotted underneath it**, so you can see which compartment is driving the number, plus the Rhine reference gauge at Kaub on its own tab.
 - **Desktop widget:** the index at a glance via WidgetKit.
 - **Local option:** automatically resolves the nearest discharge + groundwater station via your location, or pin a favorite.
@@ -126,6 +126,8 @@ Running it once registers the widget; add it via right-click desktop → **Edit 
 - [ ] Demo GIF, notarized release, landing page
 
 ## Attribution & license
+
+Map outline from [Natural Earth](https://www.naturalearthdata.com/) (`ne_50m_admin_0_countries`, public domain), simplified and baked into the source.
 
 Water data © [NIWIS / Bundesanstalt für Gewässerkunde (BfG)](https://niwis-online.de/) and the respective federal-state authorities, and © [WSV / PEGELONLINE](https://www.pegelonline.wsv.de/). Used with attribution per the sources' terms (exact data-license designation to be confirmed with the BfG). *Tiefstand* is an independent project and is not affiliated with or endorsed by the BfG or WSV.
 

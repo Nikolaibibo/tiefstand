@@ -24,6 +24,10 @@ final class IndexModel: ObservableObject {
     @Published var discharge: DomainAggregate?
     @Published var groundwater: DomainAggregate?
     @Published var localStation: StationReading?
+    /// Every gauge, for the map. These arrays were already being fetched and
+    /// discarded — only the driest station survived the refresh.
+    @Published var dischargeStations: [StationReading] = []
+    @Published var groundwaterStations: [StationReading] = []
     @Published var isLoading = false
     @Published var errorText: String?
     @Published var updatedAt: Date?
@@ -78,17 +82,27 @@ final class IndexModel: ObservableObject {
         do {
             async let d = provider.aggregate(for: .discharge)
             async let g = provider.aggregate(for: .groundwater)
+            // Station lists feed the map and the local-gauge card, but the
+            // index is computed from the aggregates alone — so a failure here
+            // must not take the whole refresh down with it. It used to: the
+            // call was `try`, and a stumble on the map endpoint blanked the
+            // number as well.
+            async let ds = try? provider.stations(for: .discharge)
+            async let gs = try? provider.stations(for: .groundwater)
+
             let (dd, gg) = try await (d, g)
-            let stations = try await provider.stations(for: .discharge)
+            let (dischargeList, groundwaterList) = await (ds ?? [], gs ?? [])
 
             withAnimation(.easeInOut) {
                 discharge = dd
                 groundwater = gg
                 index = DrynessIndex.combined(discharge: dd, groundwater: gg)
+                dischargeStations = dischargeList
+                groundwaterStations = groundwaterList
                 // TODO: nearest via CoreLocation; for now the driest station stands in.
-                localStation = stations.max { lhs, rhs in
+                localStation = dischargeList.max { lhs, rhs in
                     (lhs.lowWaterClass?.severityIndex ?? -1) < (rhs.lowWaterClass?.severityIndex ?? -1)
-                }
+                } ?? localStation
                 updatedAt = Date()
             }
 
