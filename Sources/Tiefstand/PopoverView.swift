@@ -30,6 +30,8 @@ struct PopoverView: View {
     @State private var launchAtLogin = LoginItem.isEnabled
     @State private var showingHistory = false
     @State private var headerHovering = false
+    @State private var mapDomain: WaterDomain = .discharge
+    @State private var hoveredStation: StationReading?
 
     private var level: DrynessLevel? { model.index.map { DrynessLevel(index: $0.value) } }
 
@@ -60,6 +62,9 @@ struct PopoverView: View {
                 categorySection(discharge: d, groundwater: g)
             } else if model.isLoading {
                 loading
+            }
+            if !mapStations.isEmpty {
+                regionSection
             }
             if let station = model.localStation {
                 LocalStationCard(station: station)
@@ -124,6 +129,54 @@ struct PopoverView: View {
                 DomainCard(title: "Discharge", systemImage: "water.waves", aggregate: d)
                 DomainCard(title: "Groundwater", systemImage: "arrow.down.to.line", aggregate: g)
             }
+        }
+    }
+
+    /// Which domain the map is showing. Discharge by default: it has the
+    /// denser network (357 gauges against 287) and comes back with the same
+    /// request the app already made.
+    private var mapStations: [StationReading] {
+        mapDomain == .discharge ? model.dischargeStations : model.groundwaterStations
+    }
+
+    private var regionSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("BY REGION")
+                    .font(.system(size: 10, weight: .semibold)).tracking(0.8)
+                    .foregroundStyle(.tertiary)
+                    // On the heading, not the section: on the map itself the
+                    // tooltip drops over the gauges a second into exploring
+                    // them, hiding exactly what you are pointing at.
+                    .help("Every NIWIS gauge in the country, coloured by its low-water class — normal · low · very low · extremely low. The national index is the average of these; the map is the spread behind it. Point at a gauge for its reading.")
+                Spacer()
+                Picker("", selection: $mapDomain) {
+                    Text("Discharge").tag(WaterDomain.discharge)
+                    Text("Groundwater").tag(WaterDomain.groundwater)
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .controlSize(.mini)
+                .fixedSize()
+            }
+
+            // Sized by height, not width: at 284 pt across, a portrait Germany
+            // would be ~380 pt tall and swamp the popover.
+            HStack(alignment: .top, spacing: 14) {
+                StationMap(stations: mapStations, hovered: $hoveredStation)
+                    .frame(height: 186)
+                // The detail replaces the legend in place, so pointing at a
+                // gauge doesn't shift the layout under the cursor.
+                Group {
+                    if let hoveredStation {
+                        StationDetail(station: hoveredStation)
+                    } else {
+                        StationMapLegend(stations: mapStations)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .frame(height: 186)
         }
     }
 

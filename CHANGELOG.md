@@ -1,5 +1,25 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- **A map of every gauge in the country**, under the domain donuts: 357 discharge or
+  287 groundwater stations as dots coloured by low-water class, over a thin outline of
+  the border. The discharge data was already being fetched on every refresh and thrown
+  away — only the driest station survived — so that view costs no extra request.
+- **Point at a gauge** for its name, class, current reading, trend and days below the
+  low-water threshold. `anzahlTageUnterGlw` has been arriving from NIWIS since the first
+  release and had never been shown.
+
+### Fixed
+- A failed station fetch no longer takes the whole refresh down with it. The call was
+  `try`, so a stumble on the map endpoint blanked the index too — even though the index
+  is computed from the aggregates alone.
+- The index tab decided "too sparse to plot" by counting points, so 32 samples recorded
+  over 65 minutes passed the test and drew an invisible smudge against the right edge of
+  a 7-day axis. It now measures how much of the window is actually covered, and says how
+  long the app has been recording.
+
 ## v0.3.0 — 2026-08-15
 
 ### Added
