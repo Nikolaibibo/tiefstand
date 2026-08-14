@@ -13,6 +13,10 @@ Germany now has a nationwide low-water information system, [**NIWIS**](https://n
 </p>
 
 <p align="center">
+  <img src="docs/history.png" width="340" alt="Tiefstand history view: 30-day trend of the Kaub gauge on the Rhine">
+</p>
+
+<p align="center">
   <img src="docs/widget.png" width="420" alt="Tiefstand desktop widgets (medium + small)">
 </p>
 
@@ -20,7 +24,7 @@ Germany now has a nationwide low-water information system, [**NIWIS**](https://n
   <img src="docs/menubar.png" width="120" alt="Tiefstand in the macOS menu bar">
 </p>
 
-<p align="center"><sub>Live NIWIS data, 23 Jul 2026 — national Dryness Index 50 · “High.” Menu-bar item, popover dashboard and the WidgetKit desktop widgets (medium + small).</sub></p>
+<p align="center"><sub>Live data. Popover dashboard (NIWIS, 23 Jul 2026 — index 50 · “High”), the history view (Kaub/Rhein falling from 94 to −1 cm over 30 days, 15 Aug 2026), the WidgetKit desktop widgets and the menu-bar item.</sub></p>
 
 ---
 
@@ -28,6 +32,7 @@ Germany now has a nationwide low-water information system, [**NIWIS**](https://n
 
 - **Menu bar:** the national **Dryness Index (0–100)**, color-coded, as a wave-fill indicator.
 - **Popover dashboard:** per-domain breakdown (discharge, groundwater, spring flow, water level), a Germany map, and your **local gauge** with its class, trend and current value.
+- **History:** click the index to switch to a **7- or 30-day trend** — the national index and the Rhine reference gauge at Kaub, on one chart, with the four severity bands behind the curve.
 - **Desktop widget:** the index at a glance via WidgetKit.
 - **Local option:** automatically resolves the nearest discharge + groundwater station via your location, or pin a favorite.
 
@@ -50,11 +55,15 @@ DrynessIndex       = (domainScore(discharge) + domainScore(groundwater)) / 2
 | | Source | Notes |
 |---|---|---|
 | Primary | [NIWIS](https://niwis-online.de/) (BfG) | Open reuse API, four-level classification, per-station trend, no auth |
-| Fallback | [PEGELONLINE](https://www.pegelonline.wsv.de/) (WSV) | Documented, stable; binary low/normal/high |
+| Fallback + history | [PEGELONLINE](https://www.pegelonline.wsv.de/) (WSV) | Documented, stable; binary low/normal/high. Also the **only** source of real history — a rolling 30 days of water level at 15-minute resolution |
 
 A `DataProvider` protocol abstracts the source, so PEGELONLINE transparently takes over if the NIWIS API — open for reuse, but not yet accompanied by a public OpenAPI spec — changes shape.
 
 **Well-behaved client.** *Tiefstand* reads only, polls at most every two hours, and sends an identifying `User-Agent` (`Tiefstand/0.1 (+this repo)`) so the BfG can attribute the traffic and reach out. Nothing is mirrored or redistributed — the app fetches the current national aggregate plus your local gauge, and nothing more.
+
+**Where the history comes from.** The two curves in the history view have opposite origins. Gauge history is PEGELONLINE's `measurements.json`, which serves a rolling 30-day window at 15-minute resolution — requested **only when you open the history view**, never on a timer, and cached for an hour; the gauge list is cached on disk for 30 days. The Dryness Index has no upstream history at all, because NIWIS publishes only the current aggregate, so the app records its own sample after each refresh and keeps 400 days of them locally. That curve therefore starts empty and fills in; the view says so rather than showing a blank chart.
+
+**Why Kaub.** The gauge curve is Kaub on the Rhine, Germany's reference gauge for low water. Matching your local NIWIS station to a nearby gauge was the obvious design and it doesn't work: PEGELONLINE covers federal waterways only, and 80 % of the driest NIWIS stations — precisely the ones this app surfaces — have no federal gauge within 25 km. A fixed reference gauge always has a curve to show.
 
 ## Architecture
 
