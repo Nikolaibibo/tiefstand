@@ -33,7 +33,12 @@ packages:
     path: .
 
 targets:
-  Tiefstand:
+  # Named TiefstandApp, not Tiefstand, on purpose. The SwiftPM package exports
+  # an executable product called Tiefstand, and with both in scope
+  # `xcodebuild -target Tiefstand` silently resolves to the package product:
+  # it reports BUILD SUCCEEDED and emits a bare binary with no .app bundle at
+  # all. PRODUCT_NAME keeps the built app called Tiefstand.app.
+  TiefstandApp:
     type: application
     platform: macOS
     sources:
@@ -48,11 +53,18 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.nikolaibockholt.Tiefstand
+        PRODUCT_NAME: Tiefstand
     info:
       path: build-xcode/Info-App.plist
       properties:
         CFBundleName: Tiefstand
         CFBundleDisplayName: Tiefstand
+        # Pulled from the build settings, which come from Scripts/version.sh.
+        # Without these two keys XcodeGen writes its own default of 1.0/1 —
+        # which is where the installed app's phantom "v1.0" came from while
+        # the releases said 0.4.0.
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSUIElement: true
         LSMinimumSystemVersion: "14.0"
         NSHumanReadableCopyright: "© 2026 Nikolai Bockholt. MIT-licensed. Water data © NIWIS/BfG and WSV/PEGELONLINE."
@@ -81,5 +93,7 @@ targets:
       properties:
         CFBundleName: TiefstandWidget
         CFBundleDisplayName: Tiefstand
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
