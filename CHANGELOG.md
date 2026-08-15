@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+### Changed
+- **The Dryness Level bands are calibrated against the record instead of split
+  at the quarters.** Thresholds move from 25/50/75 to **27/38/52**. Reconstructed
+  from NIWIS daily station records for 2000–2026, the national index peaked at 64
+  (August 2022) and never reached 75 in twenty-seven years — the top band could
+  not be reached, and the driest days in a generation were reported as "High".
+  The new thresholds put 2018, 2022, 2025 and 2026 into "Severe" and leave wet
+  years like 2013 and 2024 in "Normal". Method and caveats:
+  `docs/superpowers/specs/2026-08-15-band-calibration.md`.
+
+### Added
+- **Click a gauge on the map for its own record** — daily values back as far as
+  twelve months, with the low-water class boundaries drawn behind them, so you
+  can watch a river cross into "extremely low" instead of being told that it did.
+  NIWIS does not publish those boundaries as a table; they come back with every
+  chart request. One request for the one station you asked about.
+
+## Unreleased
+
 ### Added
 - **A map of every gauge in the country**, under the domain donuts: 357 discharge or
   287 groundwater stations as dots coloured by low-water class, over a thin outline of

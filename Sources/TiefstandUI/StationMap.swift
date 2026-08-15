@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 import TiefstandCore
 
 /// Every gauge in the country as a dot, coloured by its low-water class, over
@@ -9,10 +10,14 @@ import TiefstandCore
 public struct StationMap: View {
     private let stations: [StationReading]
     @Binding private var hovered: StationReading?
+    private let onSelect: (StationReading) -> Void
 
-    public init(stations: [StationReading], hovered: Binding<StationReading?>) {
+    public init(stations: [StationReading],
+                hovered: Binding<StationReading?>,
+                onSelect: @escaping (StationReading) -> Void = { _ in }) {
         self.stations = stations
         self._hovered = hovered
+        self.onSelect = onSelect
     }
 
     /// How close the cursor has to get, in points, before a gauge is picked up.
@@ -30,6 +35,12 @@ public struct StationMap: View {
                 }
             }
             .contentShape(Rectangle())
+            // The hover already resolved which gauge is under the cursor, so
+            // the click has nothing left to work out.
+            .onTapGesture { if let hovered { onSelect(hovered) } }
+            .onHover { inside in
+                if inside { NSCursor.pointingHand.push() } else { NSCursor.pop() }
+            }
             .onContinuousHover { phase in
                 switch phase {
                 case .active(let location):
