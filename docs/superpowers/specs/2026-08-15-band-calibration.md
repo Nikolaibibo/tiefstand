@@ -120,9 +120,17 @@ Today's index of 62 reads **Severe**. It previously read *High*.
    the hydrological literature. Recorded here so the omission is a known one.
 4. **Groundwater coverage is thin** — weekly measurements mean the index is
    reconstructible on 2,560 of ~9,700 days.
-5. **The colour ramp was not recalibrated.** `Hydro.rampColor` still maps
-   0 → teal, 50 → amber, 100 → red, so at an index of 62 the number reads amber
-   while its pill now says "Severe". That inconsistency is real and open.
+5. ~~**The colour ramp was not recalibrated.**~~ **Resolved 2026-08-15.** The
+   ramp had the same flaw as the bands: `index / 100` spent its top third on
+   values that never occur, so at 62 the number read amber while its pill said
+   "Severe". `Hydro.rampColor` now maps through
+   `DrynessLevel.severityFraction`, anchored at the band edges
+   (0 → 0, 27 → 0.33, 38 → 0.60, 52 → 0.85, 64 → 1.0, saturating above), so
+   colour and label change together by construction. Equal steps in the index
+   deliberately do not give equal steps in colour: 10 → 20 is weather, 50 → 60
+   is a national event. `DrynessLevel.color` resamples at the band midpoints
+   (13/32/45/58); the old points 62 and 88 are both fully red under the new
+   ramp and the two worst pills would have collapsed to one colour.
 
 ## Reproducing
 

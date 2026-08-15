@@ -57,3 +57,51 @@ final class DrynessLevelTests: XCTestCase {
         XCTAssertLessThan(DrynessLevel.highThreshold, DrynessLevel.severeThreshold)
     }
 }
+
+final class SeverityFractionTests: XCTestCase {
+
+    func test_theAnchorsSitWhereTheBandsDo() {
+        XCTAssertEqual(DrynessLevel.severityFraction(for: 0), 0, accuracy: 0.001)
+        XCTAssertEqual(DrynessLevel.severityFraction(for: DrynessLevel.elevatedThreshold), 0.33, accuracy: 0.001)
+        XCTAssertEqual(DrynessLevel.severityFraction(for: DrynessLevel.highThreshold), 0.60, accuracy: 0.001)
+        XCTAssertEqual(DrynessLevel.severityFraction(for: DrynessLevel.severeThreshold), 0.85, accuracy: 0.001)
+        XCTAssertEqual(DrynessLevel.severityFraction(for: DrynessLevel.observedMaximum), 1.0, accuracy: 0.001)
+    }
+
+    func test_itNeverGoesBackwards() {
+        var previous = -1.0
+        for index in stride(from: 0.0, through: 100.0, by: 0.5) {
+            let fraction = DrynessLevel.severityFraction(for: index)
+            XCTAssertGreaterThanOrEqual(fraction, previous, "dropped at \(index)")
+            previous = fraction
+        }
+    }
+
+    /// Beyond the record there is no redder red to reach for.
+    func test_itSaturatesAboveTheObservedMaximum() {
+        XCTAssertEqual(DrynessLevel.severityFraction(for: 70), 1.0, accuracy: 0.001)
+        XCTAssertEqual(DrynessLevel.severityFraction(for: 100), 1.0, accuracy: 0.001)
+    }
+
+    func test_negativeAndZeroBothSitAtTheCoolEnd() {
+        XCTAssertEqual(DrynessLevel.severityFraction(for: -5), 0, accuracy: 0.001)
+        XCTAssertEqual(DrynessLevel.severityFraction(for: 0), 0, accuracy: 0.001)
+    }
+
+    /// The old linear map is what left the driest day on record looking amber:
+    /// 62/100 lands barely past the ramp's midpoint, where the colour is still
+    /// yellow-orange.
+    func test_theDriestDayOnRecordNowSitsAtTheRedEnd() {
+        let today = 62.0
+
+        XCTAssertGreaterThan(DrynessLevel.severityFraction(for: today), 0.95)
+        XCTAssertLessThan(today / 100, 0.65)   // what it used to be
+    }
+
+    /// Colour has to turn over exactly where the label does, which is the whole
+    /// point — the pill said "Severe" while the number was still amber.
+    func test_severeBeginsPastTheRampsAmberMidpoint() {
+        XCTAssertGreaterThan(DrynessLevel.severityFraction(for: DrynessLevel.severeThreshold), 0.5)
+        XCTAssertLessThan(DrynessLevel.severityFraction(for: DrynessLevel.elevatedThreshold), 0.5)
+    }
+}
