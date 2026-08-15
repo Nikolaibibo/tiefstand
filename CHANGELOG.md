@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.4.0 — 2026-08-15
 
 ### Changed
 - **The colour ramp is calibrated too.** It had the same flaw as the bands:

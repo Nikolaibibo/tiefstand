@@ -24,7 +24,7 @@ Germany now has a nationwide low-water information system, [**NIWIS**](https://n
   <img src="docs/menubar.png" width="120" alt="Tiefstand in the macOS menu bar">
 </p>
 
-<p align="center"><sub>Live data, 15 Aug 2026. Popover dashboard (index 62 · “High” — discharge 71, groundwater 53), the history view (Kaub/Rhein falling from 94 to −1 cm over 30 days), the WidgetKit desktop widgets and the menu-bar item.</sub></p>
+<p align="center"><sub>Live data, 15 Aug 2026 — index 62 · “Severe”, the driest day on record outside 2018 and 2022. Popover dashboard with all 357 discharge gauges, the history view (Kaub/Rhein falling from 94 to −1 cm over 30 days), the WidgetKit desktop widgets and the menu-bar item.</sub></p>
 
 ---
 
@@ -32,6 +32,7 @@ Germany now has a nationwide low-water information system, [**NIWIS**](https://n
 
 - **Menu bar:** the national **Dryness Index (0–100)**, color-coded, as a wave-fill indicator.
 - **Popover dashboard:** per-domain breakdown, a **map of all 357 gauges** coloured by low-water class — point at one for its reading — and your **local gauge** with its class, trend and current value.
+- **Gauge records:** click any dot on the map for that station's own daily series, with its low-water class boundaries drawn behind it — you can watch a river cross into *extremely low* instead of being told that it did.
 - **History:** click the index to switch to a trend view — **7 days to 12 months** — the national index with **discharge and groundwater plotted underneath it**, so you can see which compartment is driving the number, plus the Rhine reference gauge at Kaub on its own tab.
 - **Desktop widget:** the index at a glance via WidgetKit.
 - **Local option:** automatically resolves the nearest discharge + groundwater station via your location, or pin a favorite.
@@ -47,15 +48,37 @@ DrynessIndex       = (domainScore(discharge) + domainScore(groundwater)) / 2
 ```
 
 - **Discharge + groundwater, weighted 50/50** — two independent hydrological compartments ("surface" and "sub-surface"). Water level is deliberately excluded to avoid double-counting surface water; spring flow is shown in the dashboard but kept out of the headline (sparse, regional network).
-- **The four classes are treated as equally spaced** (none/low/very low/extreme → 0/1/2/3). NIWIS classifies each station by percentile thresholds against the 1991–2020 WMO reference period, but the exact class boundaries aren't published — so equal spacing is a deliberate *minimum-assumption* choice rather than inventing severity weights the source can't justify. A mean also compresses the distribution by design; the per-domain donuts in the popover show the full spread behind the single number.
+- **The four classes are treated as equally spaced** (none/low/very low/extreme → 0/1/2/3). NIWIS classifies each station by percentile thresholds against the 1991–2020 WMO reference period. Those boundaries are not published as a table — but the portal's charting endpoint returns them with every request, one daily curve per class, which is how the calibration below was possible. A mean also compresses the distribution by design; the per-domain donuts and the map show the spread behind the single number.
 - The methodology is intentionally open so the number can be read, checked and challenged.
+
+### The bands are calibrated, not split at the quarters
+
+A score means nothing without knowing what range it occupies. The first releases cut 0–100 into four equal bands at 25/50/75, and that was wrong: a mean of severity classes across hundreds of gauges does not use its upper range.
+
+Reconstructing the national index from NIWIS daily station records for **2000–2026** — measurement against daily class boundary, aggregated the same way the app does it live — gives yearly maxima like this:
+
+```
+2022 ████████████████████ 64        2003 ███████████ 37
+2018 ██████████████████ 60          2015 ██████████ 35
+2026 ██████████████████ 59          2013 ███ 10
+2020 ████████████████ 52            2024 ███ 11
+```
+
+**The index peaked at 64 and never reached 75 in twenty-seven years.** "Severe" was not rare; it was unreachable, and the driest days in a generation were reported as "High" with an empty band above them.
+
+The thresholds are now **27 / 38 / 52** — the 75th, 90th and 98th percentiles of that reconstruction — chosen against a criterion you can argue with rather than only compute: *the droughts people remember must register, and ordinary years must not.* They put 2018, 2022, 2025 and 2026 into `Severe` and leave 2013 and 2024 in `Normal`.
+
+The colour ramp is anchored to the same edges, so colour and label change together. Equal steps in the index deliberately do not give equal steps in colour: 10 → 20 is weather, 50 → 60 is a national event.
+
+Method, validation against the live aggregate, and five named caveats: [`docs/superpowers/specs/2026-08-15-band-calibration.md`](docs/superpowers/specs/2026-08-15-band-calibration.md).
 
 ## Data sources
 
 | | Source | Notes |
 |---|---|---|
 | Primary | [NIWIS](https://niwis-online.de/) (BfG) | Open reuse API, four-level classification, per-station trend, no auth |
-| Fallback + history | [PEGELONLINE](https://www.pegelonline.wsv.de/) (WSV) | Documented, stable; binary low/normal/high. Also the **only** source of real history — a rolling 30 days of water level at 15-minute resolution |
+| Gauge records | NIWIS `infodiagramm` | Daily station values back to 1991, **with the low-water class boundaries** — reverse-engineered from the portal, not in any published spec. One request per gauge, on demand. |
+| Fallback + 30-day history | [PEGELONLINE](https://www.pegelonline.wsv.de/) (WSV) | Documented, stable; binary low/normal/high. Also the **only** source of real history — a rolling 30 days of water level at 15-minute resolution |
 
 A `DataProvider` protocol abstracts the source, so PEGELONLINE transparently takes over if the NIWIS API — open for reuse, but not yet accompanied by a public OpenAPI spec — changes shape.
 
@@ -121,6 +144,8 @@ Running it once registers the widget; add it via right-click desktop → **Edit 
 - [ ] Nearest gauge via CoreLocation + Germany map in the popover — `GaugeMatcher` is already built and tested for this
 - [x] WidgetKit desktop widget (small + medium, shared wave-gauge)
 - [ ] PEGELONLINE fallback provider — the mapper exists (`PEGELONLINEMapper`), it isn't wired up as a `DataProvider` yet
+- [x] Bands and colour ramp calibrated against the 2000–2026 record
+- [x] Per-gauge daily records with class boundaries
 - [ ] Hydro visual polish (light/dark)
 - [x] README screenshots (menu bar · popover · history · widget)
 - [ ] Demo GIF, notarized release, landing page
