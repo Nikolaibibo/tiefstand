@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 import TiefstandCore
 
 /// Line chart for a `TrendSeries`, drawn with `Canvas` to match `WaveGauge`
@@ -319,8 +320,10 @@ public struct TrendChart: View {
         ctx.stroke(line, with: .color(.secondary.opacity(0.35)),
                    style: StrokeStyle(lineWidth: 0.75, dash: [2, 2]))
 
+        // Punched out of the plot rather than painted white on it: a white
+        // marker vanishes against the light material in light mode.
         let dot = CGRect(x: px - 3, y: py - 3, width: 6, height: 6)
-        ctx.fill(Path(ellipseIn: dot), with: .color(.white))
+        ctx.fill(Path(ellipseIn: dot), with: .color(Color(nsColor: .controlBackgroundColor)))
         ctx.stroke(Path(ellipseIn: dot), with: .color(.secondary), lineWidth: 1)
     }
 

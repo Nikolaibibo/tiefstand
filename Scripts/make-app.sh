@@ -22,8 +22,8 @@ APP_NAME="Tiefstand"
 WIDGET_NAME="TiefstandWidget"
 BUNDLE_ID="com.nikolaibockholt.Tiefstand"
 WIDGET_BUNDLE_ID="$BUNDLE_ID.Widget"
-VERSION="0.4.0"
-BUILD_NUMBER="5"
+# Single source of truth, shared with the XcodeGen path — see Scripts/version.sh
+. "$(dirname "${BASH_SOURCE[0]}")/version.sh"
 MIN_MACOS="14.0"
 
 # Signing identity. Defaults to ad-hoc "-" (fine for the menu-bar app), but the

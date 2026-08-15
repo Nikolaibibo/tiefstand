@@ -111,8 +111,12 @@ public struct StationMap: View {
                 if index == 0 { path.move(to: point) } else { path.addLine(to: point) }
             }
             path.closeSubpath()
-            ctx.fill(path, with: .color(.white.opacity(0.035)))
-            ctx.stroke(path, with: .color(.white.opacity(0.45)),
+            // `.primary`, not `.white`. The popover follows the system
+            // appearance, and a hardcoded white hairline is invisible on the
+            // light material — the outline was there all along and simply
+            // could not be seen in light mode.
+            ctx.fill(path, with: .color(.primary.opacity(0.04)))
+            ctx.stroke(path, with: .color(.primary.opacity(0.30)),
                        style: StrokeStyle(lineWidth: 0.6, lineJoin: .round))
         }
     }
