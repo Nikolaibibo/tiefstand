@@ -88,6 +88,9 @@ struct Donut: View {
 
 struct LocalStationCard: View {
     let station: StationReading
+    /// Set when the station was picked by proximity; `nil` means it is the
+    /// driest gauge in the country instead.
+    var distance: String?
     @State private var hovering = false
 
     var body: some View {
@@ -107,7 +110,8 @@ struct LocalStationCard: View {
                             .foregroundStyle(.tertiary)
                             .opacity(hovering ? 1 : 0.35)
                     }
-                    Text("Driest discharge gauge").font(.caption2).foregroundStyle(.tertiary)
+                    Text(distance ?? "Driest discharge gauge")
+                        .font(.caption2).foregroundStyle(.tertiary)
                 }
                 Spacer()
                 if let trend = station.trend {
@@ -135,6 +139,8 @@ struct LocalStationCard: View {
             hovering = inside
             if inside { NSCursor.pointingHand.push() } else { NSCursor.pop() }
         }
-        .help("\(station.name) — the driest discharge gauge right now. Click to open the NIWIS map.")
+        .help(distance == nil
+              ? "\(station.name) — the driest discharge gauge right now. Click to open the NIWIS map."
+              : "\(station.name) — your nearest discharge gauge. Click to open the NIWIS map.")
     }
 }

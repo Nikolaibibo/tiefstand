@@ -75,6 +75,9 @@ cat > "$CONTENTS/Info.plist" <<PLIST
     <key>NSPrincipalClass</key>        <string>NSApplication</string>
     <key>NSHumanReadableCopyright</key><string>© 2026 Nikolai Bockholt. MIT-licensed. Water data © NIWIS/BfG and WSV/PEGELONLINE.</string>
     <key>NSLocationUsageDescription</key><string>Tiefstand uses your location to find the nearest water gauge.</string>
+    <!-- The key requestWhenInUseAuthorization actually reads on modern macOS.
+         Without it the prompt never appears and location silently stays nil. -->
+    <key>NSLocationWhenInUseUsageDescription</key><string>Tiefstand uses your location to find the nearest water gauge.</string>
 </dict>
 </plist>
 PLIST

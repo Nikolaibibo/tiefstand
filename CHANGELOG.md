@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- **Nearest gauge via CoreLocation**, opt-in from **Use My Location…** in the ••• menu.
+  The local-gauge card then shows the station closest to you with its distance,
+  instead of the driest one in the country. Declining changes nothing — the driest
+  gauge remains the default and always will be, so nobody who says no loses a
+  feature they had.
+
+  The ask sits on a menu item rather than at launch on purpose: this is an
+  `LSUIElement` agent with no Dock icon, and macOS will not present an
+  authorization prompt to an app that never comes to the front. Requesting at
+  startup goes out, shows nothing, and leaves the status `.notDetermined`
+  forever.
+
+### Changed
+- `docs/history.png` now shows a gauge's own record with its class boundaries
+  behind it, rather than the 30-day Kaub curve.
+
 ## v0.4.1 — 2026-08-15
 
 ### Fixed

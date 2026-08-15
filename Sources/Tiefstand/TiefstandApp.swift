@@ -24,6 +24,9 @@ final class IndexModel: ObservableObject {
     @Published var discharge: DomainAggregate?
     @Published var groundwater: DomainAggregate?
     @Published var localStation: StationReading?
+    /// How far away `localStation` is, when it was chosen by location rather
+    /// than by being the driest in the country.
+    @Published var localStationDistance: String?
     /// Every gauge, for the map. These arrays were already being fetched and
     /// discarded — only the driest station survived the refresh.
     @Published var dischargeStations: [StationReading] = []
@@ -34,6 +37,16 @@ final class IndexModel: ObservableObject {
 
     private let provider: DataProvider
     private let history: IndexHistoryStoring
+    private let location = LocationProvider()
+
+    /// Whether the ••• menu should still offer to use the location.
+    var canOfferLocation: Bool { !location.isAuthorized }
+
+    /// From the ••• menu — the one place the prompt can actually appear.
+    func requestLocation() {
+        location.requestPermission()
+        Task { await refresh() }
+    }
     private var autoRefreshTask: Task<Void, Never>?
     private var wakeObserver: NSObjectProtocol?
 
@@ -41,6 +54,7 @@ final class IndexModel: ObservableObject {
          history: IndexHistoryStoring = IndexHistoryStore()) {
         self.provider = provider
         self.history = history
+        location.resumeIfAuthorized()
         startAutoRefreshing()
         observeWake()
     }
@@ -99,10 +113,20 @@ final class IndexModel: ObservableObject {
                 index = DrynessIndex.combined(discharge: dd, groundwater: gg)
                 dischargeStations = dischargeList
                 groundwaterStations = groundwaterList
-                // TODO: nearest via CoreLocation; for now the driest station stands in.
-                localStation = dischargeList.max { lhs, rhs in
-                    (lhs.lowWaterClass?.severityIndex ?? -1) < (rhs.lowWaterClass?.severityIndex ?? -1)
-                } ?? localStation
+                // Your nearest gauge when the system will say where you are,
+                // otherwise the driest one in the country — which is what the
+                // app showed for its first four releases and remains a
+                // perfectly good answer.
+                if let here = location.coordinate,
+                   let nearest = NearestStation.to(here, in: dischargeList) {
+                    localStation = nearest.station
+                    localStationDistance = nearest.distanceLabel
+                } else {
+                    localStationDistance = nil
+                    localStation = dischargeList.max { lhs, rhs in
+                        (lhs.lowWaterClass?.severityIndex ?? -1) < (rhs.lowWaterClass?.severityIndex ?? -1)
+                    } ?? localStation
+                }
                 updatedAt = Date()
             }
 
