@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.4.1 — 2026-08-15
+
+### Fixed
+- **The map outline was invisible in light mode.** It was drawn in hardcoded white
+  at 45 % opacity, which disappears against the light material — so in light
+  appearance the map looked like it had no border at all. It was there the whole
+  time; development screenshots happened to be over a dark desktop. Same fix for
+  the chart's hover marker, a white dot on a light plot.
+- **One version instead of two.** `Scripts/version.sh` is now the single source for
+  both build paths. They had drifted: the released build said 0.4.0 while the
+  Xcode path was pinned at 0.1.1 and shipped bundles stamped 1.0.
+- **The Xcode build produces an app again.** The app target collided with the
+  SwiftPM executable product of the same name, so `xcodebuild -target Tiefstand`
+  quietly built the package binary and no `.app`. Renamed to `TiefstandApp`.
+  The desktop widget can therefore re-register — `pluginkit` had been pinned at
+  1.0 since July.
+
 ## v0.4.0 — 2026-08-15
 
 ### Changed
