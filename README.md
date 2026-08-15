@@ -129,9 +129,11 @@ brew install xcodegen                 # once
 export DEVELOPMENT_TEAM=XXXXXXXXXX     # your team id — the OU field, see below
 Scripts/xcodegen.sh                   # writes Tiefstand.xcodeproj (gitignored)
 open Tiefstand.xcodeproj               # then Product → Run (⌘R)
+# or headless:  xcodebuild -target TiefstandApp -configuration Release \
+#                          -allowProvisioningUpdates build
 ```
 
-Build the **Tiefstand** app target from the GUI — `xcodebuild -target Tiefstand` resolves to the SwiftPM executable product of the same name and silently produces a bare binary instead of an `.app`. Running it once registers the widget; add it via right-click desktop → **Edit Widgets** → **Tiefstand** (small or medium). Signing uses automatic provisioning — a **free** Apple ID works. Find your team id with `security find-identity -v -p codesigning -Z | grep OU=` — it is the **`OU` field**, *not* the code in parentheses after your name. Those differ, and using the parenthesised one fails with a misleading "No signing certificate 'Mac Development' found". Xcode → Settings → Accounts shows it too. `project.yml` reads it from the `DEVELOPMENT_TEAM` environment variable so it stays out of the repo. A paid account is only needed for a notarized release that runs on other people's Macs.
+The app target is called **TiefstandApp**, not `Tiefstand`: the SwiftPM package exports an executable product of that name, and with both in scope `xcodebuild -target Tiefstand` silently resolves to the package product — reporting `BUILD SUCCEEDED` while emitting a bare binary and no `.app`. `PRODUCT_NAME` keeps the built bundle called `Tiefstand.app`. Products land in `build/Release/`, not in DerivedData. Running it once registers the widget; add it via right-click desktop → **Edit Widgets** → **Tiefstand** (small or medium). Signing uses automatic provisioning — a **free** Apple ID works. Find your team id with `security find-identity -v -p codesigning -Z | grep OU=` — it is the **`OU` field**, *not* the code in parentheses after your name. Those differ, and using the parenthesised one fails with a misleading "No signing certificate 'Mac Development' found". Xcode → Settings → Accounts shows it too. `project.yml` reads it from the `DEVELOPMENT_TEAM` environment variable so it stays out of the repo. A paid account is only needed for a notarized release that runs on other people's Macs.
 
 ## Roadmap
 
