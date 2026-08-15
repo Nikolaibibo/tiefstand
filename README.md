@@ -13,7 +13,7 @@ Germany now has a nationwide low-water information system, [**NIWIS**](https://n
 </p>
 
 <p align="center">
-  <img src="docs/history.png" width="340" alt="Tiefstand history view: 30-day trend of the Kaub gauge on the Rhine">
+  <img src="docs/history.png" width="340" alt="A gauge's own record with its low-water class boundaries drawn behind it">
 </p>
 
 <p align="center">
@@ -24,7 +24,7 @@ Germany now has a nationwide low-water information system, [**NIWIS**](https://n
   <img src="docs/menubar.png" width="120" alt="Tiefstand in the macOS menu bar">
 </p>
 
-<p align="center"><sub>Live data, 15 Aug 2026 — index 62 · “Severe”, the driest day on record outside 2018 and 2022. Popover dashboard with all 357 discharge gauges, the history view (Kaub/Rhein falling from 94 to −1 cm over 30 days), the WidgetKit desktop widgets and the menu-bar item.</sub></p>
+<p align="center"><sub>Live data, 15 Aug 2026 — index 62 · “Severe”, the driest day on record outside 2018 and 2022. Popover dashboard with all 357 discharge gauges, a gauge's own twelve-month record with its class boundaries behind it (Lutherstadt Wittenberg on the Elbe, falling through every band by August), the WidgetKit desktop widgets and the menu-bar item.</sub></p>
 
 ---
 
@@ -35,7 +35,7 @@ Germany now has a nationwide low-water information system, [**NIWIS**](https://n
 - **Gauge records:** click any dot on the map for that station's own daily series, with its low-water class boundaries drawn behind it — you can watch a river cross into *extremely low* instead of being told that it did.
 - **History:** click the index to switch to a trend view — **7 days to 12 months** — the national index with **discharge and groundwater plotted underneath it**, so you can see which compartment is driving the number, plus the Rhine reference gauge at Kaub on its own tab.
 - **Desktop widget:** the index at a glance via WidgetKit.
-- **Local option:** automatically resolves the nearest discharge + groundwater station via your location, or pin a favorite.
+- **Local option:** **Use My Location…** in the ••• menu switches the local gauge from the driest in the country to the one nearest you. Entirely optional — decline it and nothing changes.
 
 ## The Dryness Index
 
@@ -143,7 +143,7 @@ The app target is called **TiefstandApp**, not `Tiefstand`: the SwiftPM package 
 - [x] Popover dashboard (index + per-domain donuts + local station)
 - [x] App bundle (`LSUIElement`) so it runs as a real menu-bar app
 - [x] History view: 7/30-day trends (index recorded locally, gauge from PEGELONLINE)
-- [ ] Nearest gauge via CoreLocation + Germany map in the popover — `GaugeMatcher` is already built and tested for this
+- [x] Nearest gauge via CoreLocation (opt-in from the ••• menu; falls back to the driest gauge)
 - [x] WidgetKit desktop widget (small + medium, shared wave-gauge)
 - [ ] PEGELONLINE fallback provider — the mapper exists (`PEGELONLINEMapper`), it isn't wired up as a `DataProvider` yet
 - [x] Bands and colour ramp calibrated against the 2000–2026 record

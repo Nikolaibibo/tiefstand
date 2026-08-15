@@ -81,7 +81,7 @@ struct PopoverView: View {
                 regionSection
             }
             if let station = model.localStation {
-                LocalStationCard(station: station)
+                LocalStationCard(station: station, distance: model.localStationDistance)
             }
             footer
         }
@@ -224,6 +224,9 @@ struct PopoverView: View {
             Menu {
                 Button("Refresh") { Task { await model.refresh() } }
                 Button("View on NIWIS…") { openExternally(niwisURL) }
+                if model.canOfferLocation {
+                    Button("Use My Location…") { model.requestLocation() }
+                }
                 Divider()
                 Toggle("Launch at Login", isOn: $launchAtLogin)
                 Divider()
