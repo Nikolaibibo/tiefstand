@@ -27,30 +27,44 @@ enum LoginItem {
 struct PopoverView: View {
     @ObservedObject var model: IndexModel
     @StateObject private var history = HistoryModel()
+    @StateObject private var gaugeSeries = GaugeSeriesModel()
     @State private var launchAtLogin = LoginItem.isEnabled
-    @State private var showingHistory = false
+    /// Three screens, not two booleans: a second flag would allow states that
+    /// cannot exist ("history and a gauge at once") and the compiler could not
+    /// stop us reaching them.
+    @State private var screen: Screen = .dashboard
     @State private var headerHovering = false
     @State private var mapDomain: WaterDomain = .discharge
     @State private var hoveredStation: StationReading?
 
     private var level: DrynessLevel? { model.index.map { DrynessLevel(index: $0.value) } }
 
+    enum Screen: Equatable {
+        case dashboard
+        case history
+        case gauge(StationReading, WaterDomain)
+    }
+
     var body: some View {
         Group {
-            if showingHistory {
-                HistoryView(model: history, onBack: { showingHistory = false })
-            } else {
+            switch screen {
+            case .dashboard:
                 dashboard
+            case .history:
+                HistoryView(model: history, onBack: { screen = .dashboard })
+            case .gauge(let station, let domain):
+                GaugeSeriesView(model: gaugeSeries, station: station, domain: domain,
+                                onBack: { screen = .dashboard })
             }
         }
         .padding(18)
         .background(background)
-        .animation(.easeInOut(duration: 0.18), value: showingHistory)
+        .animation(.easeInOut(duration: 0.18), value: screen)
     }
 
     private var dashboard: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Button { showingHistory = true } label: { header }
+            Button { screen = .history } label: { header }
                 .buttonStyle(.plain)
                 .background(.quaternary.opacity(headerHovering ? 0.4 : 0),
                             in: RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -163,7 +177,8 @@ struct PopoverView: View {
             // Sized by height, not width: at 284 pt across, a portrait Germany
             // would be ~380 pt tall and swamp the popover.
             HStack(alignment: .top, spacing: 14) {
-                StationMap(stations: mapStations, hovered: $hoveredStation)
+                StationMap(stations: mapStations, hovered: $hoveredStation,
+                           onSelect: { screen = .gauge($0, mapDomain) })
                     .frame(height: 186)
                 // The detail replaces the legend in place, so pointing at a
                 // gauge doesn't shift the layout under the cursor.
