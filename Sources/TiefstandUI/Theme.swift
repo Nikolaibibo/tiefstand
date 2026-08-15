@@ -6,8 +6,13 @@ import TiefstandCore
 /// speak the same visual language.
 public enum Hydro {
     /// Continuous ramp for an index value 0…100.
+    ///
+    /// The index is mapped through `DrynessLevel.severityFraction` rather than
+    /// divided by 100, so the ramp is anchored at the band edges and colour
+    /// agrees with the label. A linear map put the driest day in twenty-seven
+    /// years in amber while its pill read "Severe".
     public static func rampColor(_ index: Double) -> Color {
-        let t = max(0, min(1, index / 100))
+        let t = DrynessLevel.severityFraction(for: index)
         // teal → amber → red, interpolated in two legs.
         let cool = RGB(0.16, 0.62, 0.71)   // #29A0B5
         let mid  = RGB(0.95, 0.71, 0.22)   // #F2B538
@@ -58,10 +63,13 @@ public enum Hydro {
 extension DrynessLevel {
     public var color: Color {
         switch self {
-        case .normal:   return Hydro.rampColor(12)
-        case .elevated: return Hydro.rampColor(37)
-        case .high:     return Hydro.rampColor(62)
-        case .severe:   return Hydro.rampColor(88)
+        // Sampled at each band's midpoint. The old points (12/37/62/88) were
+        // spaced for the quarter-split scale; under the calibrated ramp 62 and
+        // 88 are both fully red and the two worst pills became one colour.
+        case .normal:   return Hydro.rampColor(13)
+        case .elevated: return Hydro.rampColor(32)
+        case .high:     return Hydro.rampColor(45)
+        case .severe:   return Hydro.rampColor(58)
         }
     }
 }

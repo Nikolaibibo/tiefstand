@@ -3,6 +3,10 @@
 ## Unreleased
 
 ### Changed
+- **The colour ramp is calibrated too.** It had the same flaw as the bands:
+  `index / 100` spent its top third on values that never occur, so the driest
+  day in twenty-seven years showed an amber number beside a "Severe" pill. The
+  ramp is now anchored at the band edges, so colour and label change together.
 - **The Dryness Level bands are calibrated against the record instead of split
   at the quarters.** Thresholds move from 25/50/75 to **27/38/52**. Reconstructed
   from NIWIS daily station records for 2000–2026, the national index peaked at 64
