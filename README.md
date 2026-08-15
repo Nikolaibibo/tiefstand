@@ -126,12 +126,12 @@ open build/Tiefstand.app
 
 ```bash
 brew install xcodegen                 # once
-export DEVELOPMENT_TEAM=XXXXXXXXXX     # your 10-char team id (see below)
-xcodegen generate                     # writes Tiefstand.xcodeproj (gitignored)
+export DEVELOPMENT_TEAM=XXXXXXXXXX     # your team id — the OU field, see below
+Scripts/xcodegen.sh                   # writes Tiefstand.xcodeproj (gitignored)
 open Tiefstand.xcodeproj               # then Product → Run (⌘R)
 ```
 
-Running it once registers the widget; add it via right-click desktop → **Edit Widgets** → **Tiefstand** (small or medium). Signing uses automatic provisioning — a **free** Apple ID works. Find your team id with `security find-identity -v -p codesigning` (the 10-char code in parentheses) or Xcode → Settings → Accounts; `project.yml` reads it from the `DEVELOPMENT_TEAM` environment variable so it stays out of the repo. A paid account is only needed for a notarized release that runs on other people's Macs.
+Build the **Tiefstand** app target from the GUI — `xcodebuild -target Tiefstand` resolves to the SwiftPM executable product of the same name and silently produces a bare binary instead of an `.app`. Running it once registers the widget; add it via right-click desktop → **Edit Widgets** → **Tiefstand** (small or medium). Signing uses automatic provisioning — a **free** Apple ID works. Find your team id with `security find-identity -v -p codesigning -Z | grep OU=` — it is the **`OU` field**, *not* the code in parentheses after your name. Those differ, and using the parenthesised one fails with a misleading "No signing certificate 'Mac Development' found". Xcode → Settings → Accounts shows it too. `project.yml` reads it from the `DEVELOPMENT_TEAM` environment variable so it stays out of the repo. A paid account is only needed for a notarized release that runs on other people's Macs.
 
 ## Roadmap
 
