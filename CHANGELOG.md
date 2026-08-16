@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.5.0 — 2026-08-16
 
 ### Added
 - **Nearest gauge via CoreLocation**, opt-in from **Use My Location…** in the ••• menu.
