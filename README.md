@@ -35,7 +35,9 @@ Germany now has a nationwide low-water information system, [**NIWIS**](https://n
 - **Gauge records:** click any dot on the map for that station's own daily series, with its low-water class boundaries drawn behind it — you can watch a river cross into *extremely low* instead of being told that it did.
 - **History:** click the index to switch to a trend view — **7 days to 12 months** — the national index with **discharge and groundwater plotted underneath it**, so you can see which compartment is driving the number, plus the Rhine reference gauge at Kaub on its own tab.
 - **Desktop widget:** the index at a glance via WidgetKit.
-- **Local option:** **Use My Location…** in the ••• menu switches the local gauge from the driest in the country to the one nearest you. Entirely optional — decline it and nothing changes.
+- **Local option:** **Use My Location…** in the ••• menu switches the local gauge from the driest in the country to the one nearest you, with its distance. Entirely optional — decline it and nothing changes.
+
+  Location is used and then discarded: a coarse position, compared against the station coordinates the app already downloaded, to pick the closest one. It is never stored, never sent anywhere, and the app asks for reduced accuracy because the nearest of a few hundred gauges does not change over a kilometre or two.
 
 ## The Dryness Index
 

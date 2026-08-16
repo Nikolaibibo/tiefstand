@@ -43,9 +43,22 @@ final class IndexModel: ObservableObject {
     var canOfferLocation: Bool { !location.isAuthorized }
 
     /// From the ••• menu — the one place the prompt can actually appear.
+    /// The card updates via `onFix`, not from here: the fix arrives well after
+    /// this returns.
     func requestLocation() {
         location.requestPermission()
-        Task { await refresh() }
+    }
+
+    /// Swaps the local gauge for the nearest one, using the stations already
+    /// fetched. Does nothing without a fix, which keeps the driest gauge in
+    /// place for anyone who declines.
+    func applyNearestStation() {
+        guard let here = location.coordinate,
+              let nearest = NearestStation.to(here, in: dischargeStations) else { return }
+        withAnimation(.easeInOut) {
+            localStation = nearest.station
+            localStationDistance = nearest.distanceLabel
+        }
     }
     private var autoRefreshTask: Task<Void, Never>?
     private var wakeObserver: NSObjectProtocol?
@@ -54,6 +67,9 @@ final class IndexModel: ObservableObject {
          history: IndexHistoryStoring = IndexHistoryStore()) {
         self.provider = provider
         self.history = history
+        // Re-pick the local gauge the moment a fix lands, without another
+        // network round trip — the station list is already in hand.
+        location.onFix = { [weak self] in self?.applyNearestStation() }
         location.resumeIfAuthorized()
         startAutoRefreshing()
         observeWake()
